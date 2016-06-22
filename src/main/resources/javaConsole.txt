@@ -1,0 +1,11 @@
+[gemu.rest.core.ReturnType]
+[]
+[]
+[]
+[]
+[gemu.rest.annotation.MyUrl, gemu.rest.core.MyRestParams, gemu.rest.core.ReturnType]
+[gemu.rest.annotation.MyUrl, gemu.rest.core.MyRestParams, gemu.rest.core.ReturnType]
+[gemu.rest.annotation.MyUrl, gemu.rest.app.ClassTree, gemu.rest.app.GetAllClassForProject, gemu.rest.core.ReturnType]
+[gemu.rest.annotation.MyUrl, gemu.rest.core.MyRestParams, gemu.rest.core.ReturnType]
+[]
+{"nodes":["gemu.rest.annotation.MyUrl","gemu.rest.app.ClassTree","gemu.rest.app.GetAllClassForProject","gemu.rest.core.MyRestParams","gemu.rest.core.ReturnType","gemu.rest.resource.HelloResource","gemu.rest.resource.ITVOPTestResource","gemu.rest.resource.ParseProjectResource","gemu.rest.servlet.MyRestServlet","gemu.rest.test.Test"],"rlts":[{"to":"gemu.rest.core.ReturnType","from":"gemu.rest.annotation.MyUrl"},{"to":"gemu.rest.annotation.MyUrl","from":"gemu.rest.resource.HelloResource"},{"to":"gemu.rest.core.MyRestParams","from":"gemu.rest.resource.HelloResource"},{"to":"gemu.rest.core.ReturnType","from":"gemu.rest.resource.HelloResource"},{"to":"gemu.rest.annotation.MyUrl","from":"gemu.rest.resource.ITVOPTestResource"},{"to":"gemu.rest.core.MyRestParams","from":"gemu.rest.resource.ITVOPTestResource"},{"to":"gemu.rest.core.ReturnType","from":"gemu.rest.resource.ITVOPTestResource"},{"to":"gemu.rest.annotation.MyUrl","from":"gemu.rest.resource.ParseProjectResource"},{"to":"gemu.rest.app.ClassTree","from":"gemu.rest.resource.ParseProjectResource"},{"to":"gemu.rest.app.GetAllClassForProject","from":"gemu.rest.resource.ParseProjectResource"},{"to":"gemu.rest.core.ReturnType","from":"gemu.rest.resource.ParseProjectResource"},{"to":"gemu.rest.annotation.MyUrl","from":"gemu.rest.servlet.MyRestServlet"},{"to":"gemu.rest.core.MyRestParams","from":"gemu.rest.servlet.MyRestServlet"},{"to":"gemu.rest.core.ReturnType","from":"gemu.rest.servlet.MyRestServlet"}]}

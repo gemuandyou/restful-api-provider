@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="../plugin/gojs/release/go-debug.js"></script>
+    <script src="../plugin/jquery/dist/jquery.js"></script>
+</head>
+<body ng-app="app">
+    <div id="myDemo1"
+         style="width:calc(100% - 5px); height:800px; display: inline-block;float: left;background-color: #DAE4E4;" ng-controller="bodyCtrl">
+    </div>
+
+    <script>
+        $(function() {
+
+            var initTree = function(data) {
+
+                var jsonData = JSON.parse(data);
+                console.log(jsonData);
+
+                var GO = go.GraphObject.make; // 生成GraphObject对象
+
+                var myDiagram =
+                        GO(go.Diagram, "myDemo1",
+                                {
+                                    allowDrop: true,
+//                                    layout:  // Diagram has simple horizontal layout
+//                                            GO(go.GridLayout,
+//                                                    { wrappingWidth: Infinity, alignment: go.GridLayout.Position, cellSize: new go.Size(1, 1) }),
+                                    layout: GO(go.TreeLayout,{
+                                        angle: /*270*//*180*//*90*/0,
+                                        layerSpacing: 40
+                                    }),
+                                    initialContentAlignment: go.Spot.Center,
+                                    "commandHandler.archetypeGroupData": { isGroup: true, category: "OfNodes" },
+                                    'toolManager.hoverDelay': 100,
+                                    "undoManager.isEnabled": true
+                                }
+                        );
+
+                // 提示模板
+                var tooltipTemplate =
+                        GO(go.Adornment, 'Auto',
+                                GO(go.Shape, { stroke: '#bcbcbc' }),
+                                GO(go.Panel, 'Table',
+                                        GO(go.RowColumnDefinition,
+                                                {
+                                                    row: 0,
+                                                    background: '#FFFAE3'
+                                                }
+                                        ),
+                                        GO(go.Panel, 'TableRow',
+                                                {
+                                                    isPanelMain: true
+                                                },
+                                                new go.Binding('itemArray', '', function(n,e) { var obj = [{text: n.tooltip}]; return obj; }),
+                                                {
+                                                    itemTemplate:
+                                                            GO(go.Panel,
+                                                                    new go.Binding('column'),
+                                                                    {
+                                                                        click: function(e, node) {
+                                                                            console.log(node.data);
+                                                                        }
+                                                                    },
+                                                                    GO(go.TextBlock,
+                                                                            {
+                                                                                margin: new go.Margin(20, 20, 10, 20),
+                                                                                font: '8pt Arial'
+                                                                            },
+                                                                            new go.Binding('text')
+                                                                    )
+                                                            )
+                                                }
+                                        )
+                                )
+                        );
+
+
+                myDiagram.groupTemplateMap.add("OfNodes",
+                        GO(go.Group, go.Panel.Auto,
+                                {
+                                    background: "transparent",
+                                    ungroupable: true,
+                                    computesBoundsAfterDrag: true,
+                                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
+                                    // Groups containing Nodes lay out their members vertically
+                                    layout:
+                                            GO(go.GridLayout,
+                                                    { wrappingColumn: 1, alignment: go.GridLayout.Position,
+                                                        cellSize: new go.Size(1, 1), spacing: new go.Size(4, 4) }),
+                                    toolTip: tooltipTemplate
+                                },
+                                GO(go.Shape, "Rectangle",
+                                        { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
+                                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
+                                        GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
+                                                { stretch: go.GraphObject.Horizontal, background: "#33D3E5", margin: 1 },
+                                                GO("SubGraphExpanderButton",
+                                                        { alignment: go.Spot.Right, margin: 5 }),
+                                                GO(go.TextBlock,
+                                                        {
+                                                            alignment: go.Spot.Left,
+                                                            editable: true,
+                                                            margin: 5,
+                                                            font: "bold 16px sans-serif",
+                                                            stroke: "#006080"
+                                                        },
+                                                        new go.Binding("text", "text").makeTwoWay())
+                                        ),  // end Horizontal Panel
+                                        GO(go.Placeholder,
+                                                { padding: 5, alignment: go.Spot.TopLeft })
+                                )  // end Vertical Panel
+                        ));
+
+                myDiagram.nodeTemplate =
+                        GO(go.Node, go.Panel.Auto,
+                                {
+                                    toolTip: tooltipTemplate
+                                },
+                                GO(go.Shape, "Rectangle",
+                                        { fill: "#ACE600", stroke: "#558000", strokeWidth: 2 }
+                                ),
+                                GO(go.TextBlock,
+                                        {
+                                            margin: 5,
+                                            editable: true,
+                                            font: "bold 13px sans-serif",
+                                            stroke: "#446700"
+                                        },
+                                        new go.Binding("text", "text").makeTwoWay()
+                                )
+                        );
+
+
+                // 连线
+                myDiagram.linkTemplate =
+                        GO(
+                                go.Link,
+                                {
+                                    routing: go.Link.AvoidsNodes,
+                                    corner: 5,
+                                    reshapable: true,
+                                    curve: go.Link.JumpOver, // JumpOver：设置连线不香蕉（还鸭梨呢）
+                                    selectable: true,
+                                    relinkableFrom: true,
+                                    relinkableTo: true,
+                                    resegmentable: true
+                                }, // routing --- Orthogonal：设置直线为直角，Normal为默认；corner：设置连线折点出的平滑程度，0为直角，大于0为圆角，貌似10为最大，负数为最大圆角
+                                GO(go.Shape, {strokeWidth: 2, stroke: '#999'}),
+                                GO(go.Shape,{ toArrow: 'Standard', fill: '#999', stroke: '#999'})   // 箭头
+                        );
+
+                var nodeDataArray = [
+                    { key: "Omega", isGroup: true, "category":"OfNodes", text: 'Person', tooltip: 'Person' }, // 此节点为组
+                    { key: "Beta",  group: "Omega",name: 'BetaName', text: 'BetaName', tooltip: 'BetaName'   }, // 设置此节点在组Omega中
+                    { key: "Gamma", group: "Omega",name:'GammaName', text: 'GammaName', tooltip: 'GammaName'   },
+                    { key: "Epsilon",  group: "Omega",name:'EpsilonName', text: 'EpsilonName', tooltip: 'EpsilonName'   },
+                    { key: "Zeta", group: "Omega",name:'ZetaName', text: 'ZetaName', tooltip: 'ZetaName'   },
+
+                    { key: "Delta", isGroup: true, "category": "OfNodes", text: 'Dog', tooltip: 'Dog'   },
+                    { key: "Gamma1", group: "Delta",name:'GammaName1', text: 'GammaName1', tooltip: 'GammaName1'   },
+                    { key: "Epsilon1",  group: "Delta",name:'EpsilonName1', text: 'EpsilonName1', tooltip: 'EpsilonName1'   },
+                    { key: "Zeta1", group: "Delta",name:'ZetaName1', text: 'ZetaName1', tooltip: 'ZetaName1'   }
+                ];
+                var linkDataArray = [
+                    { from: "Beta", to: "Gamma1" }, // from a Node to the Group
+                    { from: "Gamma", to: "Gamma1" },  // this link is a member of the Group
+                    { from: "Epsilon", to: "Zeta1" },  // this link is a member of the Group
+                    { from: "Zeta", to: "Epsilon1" },  // this link is a member of the Group
+                    { from: "Epsilon", to: "Epsilon1" },  // this link is a member of the Group
+                    { from: "Beta", to: "Gamma1" }  // from the Group to a Node
+                ];
+
+                nodeDataArray = [];
+                linkDataArray = [];
+                var nodeNames = jsonData.nodes;
+                for(var i = 0; i < nodeNames.length; i++) {
+                    var nodeName = nodeNames[i];
+                    var node = {};
+                    for(var j = 0; j < 2; j++) {
+                        var method = {};
+                        method.key = 'method' + j;
+                        method.group = nodeName;
+                        method.name = 'method' + j;
+                        method.text = 'method' + j;
+                        method.tooltip = 'method' + j;
+                        nodeDataArray.push(method);
+                    }
+                    node.key = nodeName;
+                    node.isGroup = true;
+                    node.text = nodeName.substr(nodeName.lastIndexOf('.') + 1);
+                    node.tooltip = nodeName;
+                    nodeDataArray.push(node);
+                }
+
+                linkDataArray = jsonData.rlts;
+
+                var model = new go.GraphLinksModel(nodeDataArray, linkDataArray);// 定义数据模板
+                myDiagram.model = model; // 使用数据模板
+            };
+
+            // 获取treeData数据
+            $.ajax({
+                async:false,
+                timeout : 60000, //超时时间设置，单位毫秒
+                type : "GET", // 请求方式
+                url : "http://localhost:8080/MyRest2/rest/project/parseClassRlt", // 请求URL
+                success : function(msg) { //成功返回的回调函数，msg是返回的结果
+                    initTree(msg);
+                },
+                cache : false //设置不用缓存（针对GET提交）
+            });
+
+    });
+
+    </script>
+</body>
+</html>
