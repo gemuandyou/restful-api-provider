@@ -12,7 +12,7 @@ import net.sf.json.JSONObject;
 @MyUrl("/hello")
 public class HelloResource {
 
-	// 还是给你个实例URL吧！ http://localhost:8080/MyRest2/rest/hello/say/idabc1-hash!abc2test/!abc3$abc4/hello
+	// 还是给你个实例URL吧！ http://localhost:8080/MyRest/rest/hello/say/idabc1-hash!abc2test/!abc3$abc4/hello
 	@MyUrl(value="/say/id@param1@-hash!@param2@test/!@param3@$@param4@/hello", type=ReturnType.STRING) //TODO 设置GET, PUT, POST, DELETE访问资源
 	public String sayHello(MyRestParams paramsObj) {
 		System.out.println(paramsObj.getParams());

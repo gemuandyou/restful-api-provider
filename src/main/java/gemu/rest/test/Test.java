@@ -25,7 +25,7 @@ public class Test {
 //			System.out.println(s);
 //		}
 
-		File file1 = new File("/Users/gemu/Development/idea_workspace/MyRest2/target/my-rest/WEB-INF/classes/gemu/rest");
+		File file1 = new File("/Users/gemu/Development/idea_workspace/MyRest/target/my-rest/WEB-INF/classes/gemu/rest");
 		System.out.println(file1.isDirectory());
 	}
 

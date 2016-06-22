@@ -19,6 +19,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="MyRest" target="1.5" />
       <module name="MyRest2" target="1.5" />
       <module name="test" target="1.5" />
     </bytecodeTargetLevel>

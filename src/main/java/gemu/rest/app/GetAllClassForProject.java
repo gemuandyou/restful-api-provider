@@ -376,7 +376,7 @@ public class GetAllClassForProject {
         List<File> files = currObj.getAllJavaForProject();
         for (File file : files) {
             String javaCode = currObj.getHandledContentByFile(file);
-            System.setOut(new PrintStream(new File("/Users/gemu/Development/idea_workspace/MyRest2/src/main/resources/javaConsole.txt")));
+            System.setOut(new PrintStream(new File("/Users/gemu/Development/idea_workspace/MyRest/src/main/resources/javaConsole.txt")));
 
             if (javaCode.indexOf("package ") == -1)
                 continue;
