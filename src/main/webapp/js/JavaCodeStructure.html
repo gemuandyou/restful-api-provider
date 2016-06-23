@@ -139,17 +139,36 @@
                         GO(
                                 go.Link,
                                 {
-                                    routing: go.Link.AvoidsNodes,
+                                    routing: go.Link.AvoidsNodes, // 连线避开节点
                                     corner: 5,
                                     reshapable: true,
                                     curve: go.Link.JumpOver, // JumpOver：设置连线不香蕉（还鸭梨呢）
                                     selectable: true,
                                     relinkableFrom: true,
                                     relinkableTo: true,
-                                    resegmentable: true
+                                    resegmentable: true,
+                                    curve: go.Link.Bezier, // 贝塞尔曲线
+                                    toEndSegmentLength: 30, fromEndSegmentLength: 30
                                 }, // routing --- Orthogonal：设置直线为直角，Normal为默认；corner：设置连线折点出的平滑程度，0为直角，大于0为圆角，貌似10为最大，负数为最大圆角
                                 GO(go.Shape, {strokeWidth: 2, stroke: '#999'}),
-                                GO(go.Shape,{ toArrow: 'Standard', fill: '#999', stroke: '#999'})   // 箭头
+                                GO(go.Shape,{ toArrow: 'Standard', fill: '#999', stroke: '#999'}),   // 箭头
+                                GO(go.Panel, "Auto",
+                                    GO(go.Shape,  // the label background, which becomes transparent around the edges
+                                        {
+                                            fill: GO(go.Brush, "Radial",
+                                                    { 0: "rgb(240, 240, 240)", 0.3: "rgb(240, 240, 240)", 1: "rgba(240, 240, 240, 0)" }),
+                                            stroke: null
+                                        }),
+                                    GO(go.TextBlock, "is called",  // the label text
+                                        {
+                                            textAlign: "center",
+                                            font: "9pt helvetica, arial, sans-serif",
+                                            margin: 4,
+                                            editable: true  // enable in-place editing
+                                        },
+                                        // editing the text automatically updates the model data
+                                        new go.Binding("text").makeTwoWay())
+                                )
                         );
 
                 var nodeDataArray = [
