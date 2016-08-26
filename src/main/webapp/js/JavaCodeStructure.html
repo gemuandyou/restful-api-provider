@@ -225,7 +225,7 @@
                 async:false,
                 timeout : 60000, //超时时间设置，单位毫秒
                 type : "GET", // 请求方式
-                url : "http://localhost:8080/MyRest/rest/project/parseClassRlt", // 请求URL
+                url : "http://localhost:9101/restful/api/project/parseClassRlt", // 请求URL
                 success : function(msg) { //成功返回的回调函数，msg是返回的结果
                     initTree(msg);
                 },

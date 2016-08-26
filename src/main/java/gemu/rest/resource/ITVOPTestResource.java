@@ -1,18 +1,20 @@
 package gemu.rest.resource;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
 import gemu.rest.annotation.MyUrl;
 import gemu.rest.core.MyRestParams;
+import gemu.rest.core.RequestMethod;
 import gemu.rest.core.ReturnType;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by gemu on 16/4/4.
  */
-@MyUrl(value = "/itvop", method="POST")
+@MyUrl(value = "/itvop")
 public class ITVOPTestResource {
 
     @MyUrl(value="/mm/getApplyMonitors", type = ReturnType.JSON)
@@ -168,7 +170,7 @@ public class ITVOPTestResource {
         return arr.toString();
     }
 
-    @MyUrl(value="/mm/queryAllScenesPage", type= ReturnType.JSON, method = "POST")
+    @MyUrl(value="/mm/queryAllScenesPage", type= ReturnType.JSON, method = RequestMethod.POST)
     private String getScene(MyRestParams paramsObj) {
         System.out.println(paramsObj);
         JSONObject ret = new JSONObject();
@@ -202,7 +204,7 @@ public class ITVOPTestResource {
         return ret.toString();
     }
 
-    @MyUrl(value="/mm/queryOwnerScenesList", type= ReturnType.JSON, method = "POST")
+    @MyUrl(value="/mm/queryOwnerScenesList", type= ReturnType.JSON, method = RequestMethod.POST)
     private String getOwnScene(MyRestParams paramsObj) {
         System.out.println(paramsObj);
         JSONObject ret = new JSONObject();
@@ -235,7 +237,7 @@ public class ITVOPTestResource {
         return ret.toString();
     }
 
-    @MyUrl(value="/mm/querySubscriberScenesList", type= ReturnType.JSON, method = "POST")
+    @MyUrl(value="/mm/querySubscriberScenesList", type= ReturnType.JSON, method = RequestMethod.POST)
     private String getSubscriberScene(MyRestParams paramsObj) {
         System.out.println(paramsObj);
         JSONObject ret = new JSONObject();

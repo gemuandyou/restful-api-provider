@@ -1,5 +1,6 @@
 package gemu.rest.annotation;
 
+import gemu.rest.core.RequestMethod;
 import gemu.rest.core.ReturnType;
 
 import java.lang.annotation.Documented;
@@ -23,7 +24,7 @@ public @interface MyUrl {
 	// 参数格式 /**/*@param@*  其中两个@之间的是参数
 	String value();
 	
-	String method() default "GET";
+	RequestMethod method() default RequestMethod.GET;
 	
 	ReturnType type() default ReturnType.STRING;
 	

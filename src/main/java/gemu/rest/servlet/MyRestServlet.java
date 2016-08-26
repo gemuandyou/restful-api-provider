@@ -1,10 +1,11 @@
 package gemu.rest.servlet;
 
 import gemu.rest.annotation.MyUrl;
+import gemu.rest.core.AmusingProperties;
 import gemu.rest.core.MyRestParams;
+import gemu.rest.core.Params;
 import gemu.rest.core.ReturnType;
-import net.sf.json.JSONObject;
-import org.apache.log4j.Logger;
+import gemu.rest.log.JavaLog;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -19,51 +20,9 @@ import java.net.URLDecoder;
 import java.util.*;
 import java.util.Map.Entry;
 
-/**
- * 用来描述参数（这个应该就是领域模型吧？）
- */
-class Params {
-	private String prefix;
-	private String suffix;
-	private String param;
-
-	public String getPrefix() {
-		return prefix;
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	public String getSuffix() {
-		return suffix;
-	}
-
-	public void setSuffix(String suffix) {
-		this.suffix = suffix;
-	}
-
-	public String getParam() {
-		return param;
-	}
-
-	public void setParam(String param) {
-		this.param = param;
-	}
-
-	public Params() {
-	}
-
-	public Params(String prefix, String suffix, String param) {
-		this.prefix = prefix;
-		this.suffix = suffix;
-		this.param = param;
-	}
-}
-
 public class MyRestServlet extends HttpServlet {
 
-	private static Logger logger = Logger.getLogger(MyRestServlet.class);
+	private JavaLog jLog = new JavaLog();
 
 	/**
 	 * 扫描的包路径
@@ -80,8 +39,14 @@ public class MyRestServlet extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private String urlParamSymbol = "@@";
+
 	@Override
 	public void init() throws ServletException {
+		// URL 参数的标志符号
+		String urlParamSymbolConfig = AmusingProperties.URL_PARAM_SYMBOL;
+		if (urlParamSymbolConfig == null || "".equals(urlParamSymbolConfig)) {} else { urlParamSymbol = urlParamSymbolConfig; };
+
 		List<String> clazzNames = new ArrayList<String>();
 		String path = Thread.currentThread().getContextClassLoader()
 				.getResource("").getPath();
@@ -138,14 +103,11 @@ public class MyRestServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest request,
 			HttpServletResponse response) {
-		logger.debug("invoking service");
 
 		String reqMethod = request.getMethod();
 
 		Map<String, String[]> reqParams = request.getParameterMap();
 
-		// 解析URL参数（不是rest url的参数）
-		Map<String, String[]> parameterMap = request.getParameterMap();
 		Enumeration en = request.getParameterNames();
         while (en.hasMoreElements()) {
             String paramName = (String) en.nextElement();
@@ -153,34 +115,36 @@ public class MyRestServlet extends HttpServlet {
         }
 
 		String reqPath = request.getPathInfo();
+		JavaLog.info("请求URL：" + reqMethod + " " + reqPath);
+
+		byte isMatch = 0;
 
 		// 遍历所有带有MyUrl注释的类（说明它是个资源）
 		for (Entry<MyUrl, Class> entity : url_class_mapping.entrySet()) {
 			MyUrl anno = entity.getKey();
 			Class clazz = entity.getValue();
-//			if (reqMethod.equals(anno.method())) {// TODO BUG,还要判断方法的注释
-				try {
-					if (reqPath != null && reqPath.equals(anno.value())) {
-						executeMatchingMethod("", clazz, response, reqParams);
-					}
-					if (reqPath != null
-							&& reqPath.startsWith(anno.value() + "/")) {
-						executeMatchingMethod(
-								reqPath.substring(reqPath.indexOf(anno.value())
-										+ anno.value().length()), clazz, response, reqParams);
-					}
-				} catch (ReflectiveOperationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			try {
+				if (reqPath != null && reqPath.equals(anno.value())) {
+					isMatch = executeMatchingMethod("", clazz, response, reqParams, reqMethod);
 				}
-
-//			}
+				if (reqPath != null
+						&& reqPath.startsWith(anno.value() + "/")) {
+					isMatch = executeMatchingMethod(
+							reqPath.substring(reqPath.indexOf(anno.value())
+									+ anno.value().length()), clazz, response, reqParams, reqMethod);
+				}
+			} catch (ReflectiveOperationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
-		 System.out.println(reqMethod);
+		if (isMatch == 0) {
+			JavaLog.info("未找到匹配路径：" + reqMethod + " " + reqPath);
+		}
 	}
 
 	/**
@@ -202,29 +166,36 @@ public class MyRestServlet extends HttpServlet {
 	 * @param clazz
 	 * @param response
 	 * @param postParams
-	 * @return
+	 * @param reqMethod 请求方式
+	 * @return 是否匹配
 	 * @throws ReflectiveOperationException
 	 * @throws IOException 
 	 */
-	private Object executeMatchingMethod(String subUrl, Class clazz, HttpServletResponse response, Map<String, String[]> postParams)
+	private byte executeMatchingMethod(String subUrl, Class clazz, HttpServletResponse response, Map<String, String[]> postParams, String reqMethod)
 			throws ReflectiveOperationException, IOException {
-		System.out.println("解析的URL：" + subUrl); //TODO log
 		Method[] methods = clazz.getDeclaredMethods();
+
+		byte isMatch = 0; // 是否有匹配的URL
+
 		for (Method method : methods) {
 			MyUrl myUrlAnno = method.getAnnotation(MyUrl.class);
-			System.out.println("方法名：" + method.getName()); //TODO log
+			JavaLog.info("资源调用的方法名：" + clazz.getName() + "." + method.getName());
 			if (myUrlAnno != null) {
 				String annoValue = myUrlAnno.value();
 				Map<String, Object> params = null;
-				byte flag = 0;
-				if (annoValue.indexOf("@") != -1) {
-					params = parseParamUrl(annoValue, subUrl);
-					flag = 1;
+
+				if (!reqMethod.toLowerCase().equals(myUrlAnno.method().getValue())) {
+					continue;
+				}
+
+				if (annoValue.indexOf(urlParamSymbol) != -1) {
+					params = parseParamUrl(annoValue, subUrl); //TODO 需要判断URL是否匹配
+					isMatch = 1;
 				}
 				if (subUrl.equals(annoValue)) {
-					flag = 2;
+					isMatch = 2;
 				}
-				if (flag != 0) { // flag -> 0: 匹配url失败； 1：带参数的url； 2：不带参数的url
+				if (isMatch != 0) { // flag -> 0: 匹配url失败； 1：带参数的url； 2：不带参数的url
 					// 反射获取url对应的方法
 					method.setAccessible(true);
 					Object obj = clazz.newInstance();
@@ -236,24 +207,22 @@ public class MyRestServlet extends HttpServlet {
 						} else {
 							executeResponse(myUrlAnno.type(), response, method.invoke(obj));
 						}
-					} else if (flag == 2){
+					} else if (isMatch == 2){
 						if (method.getParameterTypes().length != 0) {
 							executeResponse(myUrlAnno.type(), response, method.invoke(obj, new MyRestParams(null, null))); //TODO 需要调整
 						} else {
 							executeResponse(myUrlAnno.type(), response, method.invoke(obj));
 						}
 					}
+					return 3;
 				}
-//				System.out.println(annoValue); //TODO log
-//				String annoMethod = myUrlAnno.method();
-//				System.out.println(annoMethod); //TODO log
 			}
 		}
-		return null;
+		return isMatch;
 	}
 
 	/**
-	 * 解析资源中带有参数（@）的URL
+	 * 解析资源中带有参数（@@）的URL
 	 * @param annoValue
 	 * @param subUrl
 	 * @return 参数键值对 参数名：参数值
@@ -306,13 +275,13 @@ public class MyRestServlet extends HttpServlet {
 
 	/**
 	 * 解析URL片段，获取参数对象
-	 * @param part1 资源URL的带参数的部分（以"/"分割开来的某个层级）如：id@param1@-hash!@param2@test
+	 * @param part1 资源URL的带参数的部分（以"/"分割开来的某个层级）如：id@@param1@@-hash!@@param2@@test
 	 * @return Params对象集合
 	 */
 	private List<Params> getParamsFromPart(String part1) {
 		List<Params> paramsList = null;
 		Params paramObj = null;
-		String[] part1s = part1.split("@");
+		String[] part1s = part1.split(urlParamSymbol);
 		for (int i = 1; i < part1s.length; i = i + 2) { // TODO 处理资源URL书写不规范的问题
 			if (paramsList == null)
 				paramsList = new ArrayList<Params>();

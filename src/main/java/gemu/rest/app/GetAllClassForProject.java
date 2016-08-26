@@ -1,6 +1,5 @@
 package gemu.rest.app;
 
-import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -28,7 +27,7 @@ public class GetAllClassForProject {
     /**
      * 源码路径
      */
-    private static String srcPath = "/Users/gemu/Development/idea_workspace/MyRest";
+    public static String srcPath = "/Users/gemu/Development/idea_workspace/MyRest";
 
     /**
      *
@@ -334,7 +333,15 @@ public class GetAllClassForProject {
         List<File> files = currObj.getAllJavaForProject();
         for (File file : files) {
             String javaCode = currObj.getHandledContentByFile(file);
-            System.setOut(new PrintStream(new File("C:\\Users\\Gemu\\Documents\\javaConsole.txt")));
+            File logFile = new File("D:\\javaConsole.txt");
+            if (logFile.exists()) {
+                try {
+                    logFile.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.setOut(new PrintStream(logFile));
 
             if (javaCode.indexOf("package ") == -1)
                 continue;

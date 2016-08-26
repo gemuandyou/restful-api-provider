@@ -11,7 +11,6 @@ public enum ReturnType {
 	
 	private String value;
 
-	
 	private ReturnType() {
 	}
 

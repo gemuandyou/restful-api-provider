@@ -16,6 +16,7 @@ public class ParseProjectResource {
     @MyUrl(value = "/parseClassRlt", type = ReturnType.STRING)
     public String parseClassRlt() {
         try {
+            GetAllClassForProject.srcPath = "D:\\idea_workspace\\yunan_core\\company_info";
             ClassTree classTree = GetAllClassForProject.getClassTree();
             return classTree.toString();
         } catch (FileNotFoundException e) {
