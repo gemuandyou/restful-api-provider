@@ -1,8 +1,7 @@
 package gemu.rest.test;
 
-import net.sf.json.JSONObject;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 public class Test {
 
@@ -34,4 +33,26 @@ public class Test {
 		String substring = classFileName.substring(0, classFileName.length() - 6).replaceAll("/|\\\\", ".");
 		return substring.substring(substring.indexOf(pkg));
 	}
+
+
+// 反射获取方法参数的注释内容
+//	public void test(@RequestParam("abc") String t) {
+//
+//	}
+//
+//	public static void main(String[] args) throws NoSuchMethodException, ClassNotFoundException, NoSuchFieldException, InvocationTargetException, IllegalAccessException {
+//		Class clazz = CourseServiceImpl.class;
+//		Method test = clazz.getMethod("test", String.class);
+//		System.out.println(test);
+//		Annotation[][] parameterAnnotations = test.getParameterAnnotations();
+//		for (Annotation[] annotations : parameterAnnotations) {
+//			for (Annotation annotation : annotations) {
+//				System.out.println(annotation);
+//				Method m = annotation.getClass().getDeclaredMethod("value");
+//				Object invoke = m.invoke(annotation);
+//				System.out.println(invoke);
+//			}
+//		}
+//	}
+
 }

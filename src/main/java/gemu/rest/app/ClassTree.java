@@ -11,25 +11,26 @@ import java.util.Map;
  */
 public class ClassTree {
 
-    private List<String> clazzs;
+    private List<List<Map<String, String>>> clazzs;
     private List<Map<String, String>> clazzRlts;
 
-    public List<String> getClazz() {
-        return clazzs;
-    }
-
-    public void setClazz(List<String> clazz) {
-        this.clazzs = clazz;
-    }
-
-    public List<Map<String, String>> getClazzRel() {
+    public List<Map<String, String>> getClazzRlts() {
         return clazzRlts;
     }
 
-    public void setClazzRel() {
+    public void setClazzRlts(List<Map<String, String>> clazzRlts) {
+        this.clazzRlts = clazzRlts;
     }
 
-    public ClassTree(List<String> clazzs, List<Map<String, String>> clazzRlts) {
+    public List<List<Map<String, String>>> getClazzs() {
+        return clazzs;
+    }
+
+    public void setClazzs(List<List<Map<String, String>>> clazzs) {
+        this.clazzs = clazzs;
+    }
+
+    public ClassTree(List<List<Map<String, String>>> clazzs, List<Map<String, String>> clazzRlts) {
         this.clazzs = clazzs;
         this.clazzRlts = clazzRlts;
     }

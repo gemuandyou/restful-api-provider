@@ -22,7 +22,7 @@ import java.util.Map.Entry;
 
 public class MyRestServlet extends HttpServlet {
 
-	private JavaLog jLog = new JavaLog();
+	private JavaLog jLog = new JavaLog("info");
 
 	/**
 	 * 扫描的包路径
@@ -119,7 +119,7 @@ public class MyRestServlet extends HttpServlet {
 
 		byte isMatch = 0;
 
-		// 遍历所有带有MyUrl注释的类（说明它是个资源）
+		// 遍历所有带有MyUrl注释的类（带有MyUrl注释说明它是个资源）
 		for (Entry<MyUrl, Class> entity : url_class_mapping.entrySet()) {
 			MyUrl anno = entity.getKey();
 			Class clazz = entity.getValue();
@@ -179,22 +179,39 @@ public class MyRestServlet extends HttpServlet {
 
 		for (Method method : methods) {
 			MyUrl myUrlAnno = method.getAnnotation(MyUrl.class);
-			JavaLog.info("资源调用的方法名：" + clazz.getName() + "." + method.getName());
 			if (myUrlAnno != null) {
 				String annoValue = myUrlAnno.value();
 				Map<String, Object> params = null;
 
+				// 判断请求方法是否匹配
 				if (!reqMethod.toLowerCase().equals(myUrlAnno.method().getValue())) {
 					continue;
 				}
 
+				JavaLog.info("资源调用的方法名：" + clazz.getName() + "." + method.getName());
+
+                // 去除URL后面多余的"/"
+                if (annoValue.charAt(annoValue.length() - 1) == '/') {
+                    annoValue = annoValue.substring(0, annoValue.length() - 1);
+                }
+                if (subUrl.charAt(subUrl.length() - 1) == '/') {
+                    subUrl = subUrl.substring(0, subUrl.length() - 1);
+                }
+
+				// 带参数的URL
 				if (annoValue.indexOf(urlParamSymbol) != -1) {
-					params = parseParamUrl(annoValue, subUrl); //TODO 需要判断URL是否匹配
-					isMatch = 1;
+					params = parseParamUrl(annoValue, subUrl);
+                    if (params == null)
+                        isMatch = 0;
+                    else
+                        isMatch = 1;
 				}
+
+				// 判断不带参数的URL是否匹配
 				if (subUrl.equals(annoValue)) {
 					isMatch = 2;
 				}
+
 				if (isMatch != 0) { // flag -> 0: 匹配url失败； 1：带参数的url； 2：不带参数的url
 					// 反射获取url对应的方法
 					method.setAccessible(true);
@@ -202,14 +219,26 @@ public class MyRestServlet extends HttpServlet {
 					// 响应
 					if (params != null || !postParams.isEmpty()) {
 						MyRestParams restParams = new MyRestParams(params, postParams);
-						if (method.getParameterTypes().length != 0) {
-							executeResponse(myUrlAnno.type(), response, method.invoke(obj, restParams));
+                        int methodParamsLen = method.getParameterTypes().length;
+						if (methodParamsLen != 0) {
+							Object[] customParams = new Object[methodParamsLen]; // 请求的目标方法参数
+							for (int i = 0; i < methodParamsLen; i++) {
+								Class methodParamType = method.getParameterTypes()[i];
+                                if (MyRestParams.class.getName().equals(methodParamType.getName())) {
+                                    customParams[i] = restParams;
+                                    continue;
+                                }
+                                if (HttpServletResponse.class.getName().equals(methodParamType.getName())) {
+                                    customParams[i] = response;
+                                }
+							}
+							executeResponse(myUrlAnno.type(), response, method.invoke(obj, customParams));
 						} else {
 							executeResponse(myUrlAnno.type(), response, method.invoke(obj));
 						}
 					} else if (isMatch == 2){
 						if (method.getParameterTypes().length != 0) {
-							executeResponse(myUrlAnno.type(), response, method.invoke(obj, new MyRestParams(null, null))); //TODO 需要调整
+							executeResponse(myUrlAnno.type(), response, method.invoke(obj, new MyRestParams(null, null)));
 						} else {
 							executeResponse(myUrlAnno.type(), response, method.invoke(obj));
 						}
@@ -230,17 +259,10 @@ public class MyRestServlet extends HttpServlet {
 	private Map<String, Object> parseParamUrl(String annoValue, String subUrl) {
 		Map<String, Object> params = null; // 用到的时候在初始化。可优化代码 *
 
-		if (annoValue.charAt(annoValue.length() - 1) == '/') {
-			annoValue.substring(0, annoValue.length() - 1);
-		}
-		if (subUrl.charAt(subUrl.length() - 1) == '/') {
-			subUrl.substring(0, subUrl.length() - 1);
-		}
-
 		String[] annoValues = annoValue.split("/");
 		String[] subUrls = subUrl.split("/");
 
-		if (annoValues.length > subUrls.length) {
+		if (annoValues.length != subUrls.length) {
 			return null;
 		}
 
@@ -248,7 +270,7 @@ public class MyRestServlet extends HttpServlet {
 			String part1 = annoValues[i];
 			String part2 = subUrls[i];
 
-			List<Params> paramsList = getParamsFromPart(part1);
+			List<Params> paramsList = getParamsFromPart(part1, part2);
 
 			if (paramsList != null) {
 				int listLen = paramsList.size();
@@ -276,13 +298,19 @@ public class MyRestServlet extends HttpServlet {
 	/**
 	 * 解析URL片段，获取参数对象
 	 * @param part1 资源URL的带参数的部分（以"/"分割开来的某个层级）如：id@@param1@@-hash!@@param2@@test
+     * @param part2 客户端请求的部分URL
 	 * @return Params对象集合
 	 */
-	private List<Params> getParamsFromPart(String part1) {
+	private List<Params> getParamsFromPart(String part1, String part2) {
 		List<Params> paramsList = null;
 		Params paramObj = null;
-		String[] part1s = part1.split(urlParamSymbol);
-		for (int i = 1; i < part1s.length; i = i + 2) { // TODO 处理资源URL书写不规范的问题
+        String[] part1s = part1.split(urlParamSymbol);
+
+        if (checkParamUrlMatch(part2, part1s) == 0) {
+            return null;
+        }
+
+		for (int i = 1; i < part1s.length; i = i + 2) { // TODO 处理资源URL书写不规范的问题，URL分隔符不是偶数
 			if (paramsList == null)
 				paramsList = new ArrayList<Params>();
 			paramObj = new Params();
@@ -294,6 +322,22 @@ public class MyRestServlet extends HttpServlet {
 		return paramsList;
 	}
 
+    /**
+     * 判断带参数的URL是否匹配
+     * @param matchUrl 客户端请求的部分URL 如：id@@param1@@-hash!@@param2@@test
+     * @param exclusiveReqUrl 去除参数部分的URL数组
+     * @return 0:不匹配；1:匹配
+     */
+    private byte checkParamUrlMatch(String matchUrl, String... exclusiveReqUrl) {
+        for (int i = 0; i < exclusiveReqUrl.length; i = i + 2) {
+            if (matchUrl.indexOf(exclusiveReqUrl[i]) == -1)
+                return 0;
+            else
+                matchUrl = matchUrl.substring(matchUrl.indexOf(exclusiveReqUrl[i]) + exclusiveReqUrl[i].length());
+        }
+        return 1;
+    }
+
 	/**
 	 * 根据不同返回类型，做出不同响应方式
 	 * @param rt 返回值类型
@@ -302,7 +346,7 @@ public class MyRestServlet extends HttpServlet {
 	 * @throws IOException 
 	 */
 	private void executeResponse(ReturnType rt, HttpServletResponse response, Object responseBody) throws IOException {
-		
+
 		switch(rt) {
 			case STRING:
 				System.out.println(responseBody.toString());

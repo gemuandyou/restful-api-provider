@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title></title>
     <script src="../plugin/gojs/release/go-debug.js"></script>
     <script src="../plugin/jquery/dist/jquery.js"></script>
+    <style type="text/css">
+        #myOverview {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: aliceblue;
+            z-index: 300; /* make sure its in front */
+            border: solid 1px blue;
+            width:200px;
+            height:100px
+        }
+    </style>
 </head>
 <body ng-app="app">
+    </div><div id="myOverview"></div>
     <div id="myDemo1"
          style="width:calc(100% - 5px); height:800px; display: inline-block;float: left;background-color: #DAE4E4;" ng-controller="bodyCtrl">
     </div>
@@ -29,8 +42,8 @@
 //                                            GO(go.GridLayout,
 //                                                    { wrappingWidth: Infinity, alignment: go.GridLayout.Position, cellSize: new go.Size(1, 1) }),
                                     layout: GO(go.TreeLayout,{
-                                        angle: /*270*//*180*//*90*/0,
-                                        layerSpacing: 40
+                                        angle: /*270*//*180*/90/*0*/, // 画面旋转角度
+                                        layerSpacing: 100 // 每层间隔
                                     }),
                                     initialContentAlignment: go.Spot.Center,
                                     "commandHandler.archetypeGroupData": { isGroup: true, category: "OfNodes" },
@@ -38,6 +51,10 @@
                                     "undoManager.isEnabled": true
                                 }
                         );
+
+                // 预览框
+                GO(go.Overview, "myOverview",  // the HTML DIV element for the Overview
+                        { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
 
                 // 提示模板
                 var tooltipTemplate =
@@ -78,41 +95,42 @@
                         );
 
 
-                myDiagram.groupTemplateMap.add("OfNodes",
-                        GO(go.Group, go.Panel.Auto,
-                                {
-                                    background: "transparent",
-                                    ungroupable: true,
-                                    computesBoundsAfterDrag: true,
-                                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
-                                    // Groups containing Nodes lay out their members vertically
-                                    layout:
-                                            GO(go.GridLayout,
-                                                    { wrappingColumn: 1, alignment: go.GridLayout.Position,
-                                                        cellSize: new go.Size(1, 1), spacing: new go.Size(4, 4) }),
-                                    toolTip: tooltipTemplate
-                                },
-                                GO(go.Shape, "Rectangle",
-                                        { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
-                                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
-                                        GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
-                                                { stretch: go.GraphObject.Horizontal, background: "#33D3E5", margin: 1 },
-                                                GO("SubGraphExpanderButton",
-                                                        { alignment: go.Spot.Right, margin: 5 }),
-                                                GO(go.TextBlock,
-                                                        {
-                                                            alignment: go.Spot.Left,
-                                                            editable: true,
-                                                            margin: 5,
-                                                            font: "bold 16px sans-serif",
-                                                            stroke: "#006080"
-                                                        },
-                                                        new go.Binding("text", "text").makeTwoWay())
-                                        ),  // end Horizontal Panel
-                                        GO(go.Placeholder,
-                                                { padding: 5, alignment: go.Spot.TopLeft })
-                                )  // end Vertical Panel
-                        ));
+                // 设置组模板
+//                myDiagram.groupTemplateMap.add("OfNodes",
+//                        GO(go.Group, go.Panel.Auto,
+//                                {
+//                                    background: "transparent",
+//                                    ungroupable: true,
+//                                    computesBoundsAfterDrag: true,
+//                                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
+//                                    // Groups containing Nodes lay out their members vertically
+//                                    layout:
+//                                            GO(go.GridLayout,
+//                                                    { wrappingColumn: 1, alignment: go.GridLayout.Position,
+//                                                        cellSize: new go.Size(1, 1), spacing: new go.Size(40, 4) }),
+//                                    toolTip: tooltipTemplate
+//                                },
+//                                GO(go.Shape, "RoundedRectangle",
+//                                        { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
+//                                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
+//                                        GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
+//                                                { stretch: go.GraphObject.Horizontal, background: "#33D3E5" },
+//                                                GO("SubGraphExpanderButton",
+//                                                        { alignment: go.Spot.Right, margin: 5 }),
+//                                                GO(go.TextBlock,
+//                                                        {
+//                                                            alignment: go.Spot.Left,
+//                                                            editable: true,
+//                                                            margin: 5,
+//                                                            font: "bold 16px sans-serif",
+//                                                            stroke: "#006080"
+//                                                        },
+//                                                        new go.Binding("text", "text").makeTwoWay())
+//                                        ),  // end Horizontal Panel
+//                                        GO(go.Placeholder,
+//                                                { padding: 5, alignment: go.Spot.TopLeft })
+//                                )  // end Vertical Panel
+//                        ));
 
                 myDiagram.nodeTemplate =
                         GO(go.Node, go.Panel.Auto,
@@ -124,7 +142,7 @@
                                 ),
                                 GO(go.TextBlock,
                                         {
-                                            margin: 5,
+                                            margin: 7,
                                             editable: true,
                                             font: "bold 13px sans-serif",
                                             stroke: "#446700"
@@ -159,7 +177,7 @@
                                                     { 0: "rgb(240, 240, 240)", 0.3: "rgb(240, 240, 240)", 1: "rgba(240, 240, 240, 0)" }),
                                             stroke: null
                                         }),
-                                    GO(go.TextBlock, "is called",  // the label text
+                                    GO(go.TextBlock, "被调用",  // the label text
                                         {
                                             textAlign: "center",
                                             font: "9pt helvetica, arial, sans-serif",
@@ -198,19 +216,19 @@
                 for(var i = 0; i < nodeNames.length; i++) {
                     var nodeName = nodeNames[i];
                     var node = {};
-                    for(var j = 0; j < 2; j++) {
+                    for(var j = 1; j < nodeName.length; j++) {
                         var method = {};
-                        method.key = 'method' + j;
-                        method.group = nodeName;
-                        method.name = 'method' + j;
-                        method.text = 'method' + j;
-                        method.tooltip = 'method' + j;
+                        method.key = nodeName[j].name;
+                        method.group = nodeName[0].name;
+                        method.name = nodeName[j].name;
+                        method.text = nodeName[j].name;
+                        method.tooltip = nodeName[j].anno;
                         nodeDataArray.push(method);
                     }
-                    node.key = nodeName;
+                    node.key = nodeName[0].name;
                     node.isGroup = true;
-                    node.text = nodeName.substr(nodeName.lastIndexOf('.') + 1);
-                    node.tooltip = nodeName;
+                    node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
+                    node.tooltip = nodeName[0].name;
                     nodeDataArray.push(node);
                 }
 
@@ -225,9 +243,10 @@
                 async:false,
                 timeout : 60000, //超时时间设置，单位毫秒
                 type : "GET", // 请求方式
+                contentType:"text/html;charset=utf-8",
                 url : "http://localhost:9101/restful/api/project/parseClassRlt", // 请求URL
-                success : function(msg) { //成功返回的回调函数，msg是返回的结果
-                    initTree(msg);
+                success : function(data) { //成功返回的回调函数，msg是返回的结果
+                    initTree(data);
                 },
                 cache : false //设置不用缓存（针对GET提交）
             });
