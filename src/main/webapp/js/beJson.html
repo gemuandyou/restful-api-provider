@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>解析JSON无格式字符串</title>
+    <script src="../plugin/jquery/dist/jquery.js"></script>
+</head>
+<body>
+<div>
+    <textarea rows="30" style="width: 100%;background-color: ghostwhite" placeholder="请输入要解析的字符串"></textarea>
+</div>
+<script>
+
+    $.ajax({
+//                async:false,
+        timeout : 60000, //超时时间设置，单位毫秒
+        type : "POST", // 请求方式
+//                contentType:"text/html;charset=utf-8",
+        url : "/restful/api/project/parseClassRlt", // 请求URL
+        data : {filePath: filePath},
+        dataType : "json",
+        success : function(data) { //成功返回的回调函数，msg是返回的结果
+            clearInterval(handle);
+            $('.load-text').text('');
+            refreshDiagramData(data);
+        },
+        cache : false //设置不用缓存（针对GET提交）
+    });
+</script>
+</body>
+</html>
