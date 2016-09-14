@@ -215,7 +215,6 @@ public class GetAllClassForProject {
         if (isMatch) {
             String beforeMName = string.substring(0, string.indexOf("("));
             beforeMName = beforeMName.trim();
-            System.out.println(string);
             beforeMName = beforeMName.substring(beforeMName.lastIndexOf(" "));
             beforeMName = beforeMName.trim();
             return beforeMName;
@@ -251,9 +250,11 @@ public class GetAllClassForProject {
                 if (buffer.trim().matches(".*\\*\\/$")) {
                     loadingAnno = false;
                     annoSb.append(buffer);
+                    annoSb.append("\n");
                 }
                 if (loadingAnno) {
                     annoSb.append(buffer);
+                    annoSb.append("\n");
                 }
 
 

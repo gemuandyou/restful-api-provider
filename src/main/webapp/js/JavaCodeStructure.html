@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title></title>
+    <title>Java项目结构和类的引用关系解析</title>
     <script src="../plugin/gojs/release/go-debug.js"></script>
     <script src="../plugin/jquery/dist/jquery.js"></script>
     <style type="text/css">
@@ -23,14 +23,12 @@
     <div id="myDemo1"
          style="width:calc(100% - 5px); height:800px; display: inline-block;float: left;background-color: #DAE4E4;" ng-controller="bodyCtrl">
     </div>
+    <div style="line-height: 50px;"><input placeholder="本地项目路径" type="text" name="path" style="width: 500px; height: 25px;"> <button style="line-height: 25px;" onclick="generator()">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span></div>
 
     <script>
-        $(function() {
+//        $(function() {
 
             var initTree = function(data) {
-
-                var jsonData = JSON.parse(data);
-                console.log(jsonData);
 
                 var GO = go.GraphObject.make; // 生成GraphObject对象
 
@@ -96,41 +94,45 @@
 
 
                 // 设置组模板
-//                myDiagram.groupTemplateMap.add("OfNodes",
-//                        GO(go.Group, go.Panel.Auto,
-//                                {
-//                                    background: "transparent",
-//                                    ungroupable: true,
-//                                    computesBoundsAfterDrag: true,
-//                                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
-//                                    // Groups containing Nodes lay out their members vertically
-//                                    layout:
-//                                            GO(go.GridLayout,
-//                                                    { wrappingColumn: 1, alignment: go.GridLayout.Position,
-//                                                        cellSize: new go.Size(1, 1), spacing: new go.Size(40, 4) }),
-//                                    toolTip: tooltipTemplate
-//                                },
-//                                GO(go.Shape, "RoundedRectangle",
-//                                        { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
-//                                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
-//                                        GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
-//                                                { stretch: go.GraphObject.Horizontal, background: "#33D3E5" },
-//                                                GO("SubGraphExpanderButton",
-//                                                        { alignment: go.Spot.Right, margin: 5 }),
-//                                                GO(go.TextBlock,
-//                                                        {
-//                                                            alignment: go.Spot.Left,
-//                                                            editable: true,
-//                                                            margin: 5,
-//                                                            font: "bold 16px sans-serif",
-//                                                            stroke: "#006080"
-//                                                        },
-//                                                        new go.Binding("text", "text").makeTwoWay())
-//                                        ),  // end Horizontal Panel
-//                                        GO(go.Placeholder,
-//                                                { padding: 5, alignment: go.Spot.TopLeft })
-//                                )  // end Vertical Panel
-//                        ));
+                myDiagram.groupTemplateMap.add("ClassNode",
+                        GO(go.Group, go.Panel.Auto,
+                                {
+                                    background: "transparent",
+                                    ungroupable: true,
+                                    computesBoundsAfterDrag: true,
+                                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
+                                    // Groups containing Nodes lay out their members vertically
+                                    layout:
+                                            GO(go.GridLayout,
+                                                    { wrappingColumn: 1, alignment: go.GridLayout.Position,
+                                                        cellSize: new go.Size(1, 1), spacing: new go.Size(40, 4) })
+                                },
+                                GO(go.Shape, "RoundedRectangle",
+                                        { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
+                                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
+                                        GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
+                                                {
+                                                    stretch: go.GraphObject.Horizontal,
+                                                    background: "#33D3E5"
+                                                },
+                                                GO("SubGraphExpanderButton",
+                                                        { alignment: go.Spot.Right, margin: 5 }),
+                                                GO(go.TextBlock,
+                                                        {
+                                                            alignment: go.Spot.Left,
+                                                            editable: true,
+                                                            margin: 5,
+                                                            font: "bold 16px sans-serif",
+                                                            stroke: "#006080",
+                                                            toolTip: tooltipTemplate
+                                                        },
+                                                        new go.Binding("text", "text").makeTwoWay())
+                                        ),  // end Horizontal Panel
+                                        GO(go.Placeholder,
+                                                { padding: 5, alignment: go.Spot.TopLeft })
+                                )  // end Vertical Panel
+                        )
+                );
 
                 myDiagram.nodeTemplate =
                         GO(go.Node, go.Panel.Auto,
@@ -138,7 +140,7 @@
                                     toolTip: tooltipTemplate
                                 },
                                 GO(go.Shape, "Rectangle",
-                                        { fill: "#ACE600", stroke: "#558000", strokeWidth: 2 }
+                                        { fill: "#e1e1e1", stroke: "#558000", strokeWidth: 1, areaBackground: 'red' }
                                 ),
                                 GO(go.TextBlock,
                                         {
@@ -210,48 +212,88 @@
                     { from: "Beta", to: "Gamma1" }  // from the Group to a Node
                 ];
 
-                nodeDataArray = [];
-                linkDataArray = [];
-                var nodeNames = jsonData.nodes;
-                for(var i = 0; i < nodeNames.length; i++) {
-                    var nodeName = nodeNames[i];
-                    var node = {};
-                    for(var j = 1; j < nodeName.length; j++) {
-                        var method = {};
-                        method.key = nodeName[j].name;
-                        method.group = nodeName[0].name;
-                        method.name = nodeName[j].name;
-                        method.text = nodeName[j].name;
-                        method.tooltip = nodeName[j].anno;
-                        nodeDataArray.push(method);
+                var refreshDiagramData = function(jsonData) {
+                    nodeDataArray = [];
+                    linkDataArray = [];
+                    var nodeNames = jsonData.nodes;
+                    for(var i = 0; i < nodeNames.length; i++) {
+                        var nodeName = nodeNames[i];
+                        var node = {};
+                        for(var j = 1; j < nodeName.length; j++) {
+                            var method = {};
+                            method.key = nodeName[j].name;
+                            method.group = nodeName[0].name;
+                            method.name = nodeName[j].name;
+                            method.text = nodeName[j].name;
+                            method.tooltip = nodeName[j].anno;
+                            nodeDataArray.push(method);
+                        }
+                        node.key = nodeName[0].name;
+                        node.isGroup = true;
+                        node.category = "ClassNode";
+                        node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
+                        node.tooltip = nodeName[0].name;
+                        nodeDataArray.push(node);
                     }
-                    node.key = nodeName[0].name;
-                    node.isGroup = true;
-                    node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
-                    node.tooltip = nodeName[0].name;
-                    nodeDataArray.push(node);
-                }
 
-                linkDataArray = jsonData.rlts;
+                    linkDataArray = jsonData.rlts;
 
-                var model = new go.GraphLinksModel(nodeDataArray, linkDataArray);// 定义数据模板
-                myDiagram.model = model; // 使用数据模板
+                    var model = new go.GraphLinksModel(nodeDataArray, linkDataArray);// 定义数据模板
+                    myDiagram.model = model; // 使用数据模板
+                };
+                refreshDiagramData(data);
+
+                return refreshDiagramData;
             };
 
-            // 获取treeData数据
-            $.ajax({
-                async:false,
-                timeout : 60000, //超时时间设置，单位毫秒
-                type : "GET", // 请求方式
-                contentType:"text/html;charset=utf-8",
-                url : "http://localhost:9101/restful/api/project/parseClassRlt", // 请求URL
-                success : function(data) { //成功返回的回调函数，msg是返回的结果
-                    initTree(data);
-                },
-                cache : false //设置不用缓存（针对GET提交）
+            var refreshDiagramData = initTree({nodes: [], rlts: []});
+
+            var generator = function() {
+                var filePath = $('input[name="path"]').val();
+
+                var handle = setInterval(function() {
+                    console.count();
+                    var text = $('.load-text').text();
+                    if (text.length > 5) {
+                        text = '';
+                    } else {
+                        text += '.';
+                    }
+                    $('.load-text').text(text);
+                }, 500);
+
+                setTimeout(function() {
+                    clearInterval(handle);
+                    $('.load-text').text('');
+                }, 60000);
+
+                // 获取treeData数据
+                $.ajax({
+//                async:false,
+                    timeout : 60000, //超时时间设置，单位毫秒
+                    type : "POST", // 请求方式
+//                contentType:"text/html;charset=utf-8",
+                    url : "/restful/api/project/parseClassRlt", // 请求URL
+                    data : {filePath: filePath},
+                    dataType : "json",
+                    success : function(data) { //成功返回的回调函数，msg是返回的结果
+                        clearInterval(handle);
+                        $('.load-text').text('');
+                        refreshDiagramData(data);
+                    },
+                    cache : false //设置不用缓存（针对GET提交）
+                });
+            };
+
+            $('input[name="path"]').focus();
+
+            $('input[name="path"]').bind('keyup', function(event) {
+                if (event.keyCode == '13') {
+                    generator();
+                }
             });
 
-    });
+//    });
 
     </script>
 </body>

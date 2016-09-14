@@ -349,11 +349,9 @@ public class MyRestServlet extends HttpServlet {
 
 		switch(rt) {
 			case STRING:
-				System.out.println(responseBody.toString());
 				response.getWriter().write(responseBody.toString());
 				break;
 			case JSON:
-				System.out.println(responseBody.toString());
 				response.setContentType(rt.getValue());
 				response.getWriter().write(responseBody.toString());
 				break;
