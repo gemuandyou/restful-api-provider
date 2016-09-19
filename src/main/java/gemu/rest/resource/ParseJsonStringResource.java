@@ -19,7 +19,6 @@ public class ParseJsonStringResource {
     @MyUrl(value = "/", method = RequestMethod.POST)
     public String parseJsonString(MyRestParams paramsObj) {
         String jsonString = JsonStringFormatParse.formatParse(paramsObj.getPostParams().get("jsonString")[0].toString());
-        System.out.println(jsonString);
         return jsonString;
     }
 
