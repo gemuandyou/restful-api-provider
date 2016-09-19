@@ -5,6 +5,8 @@ import gemu.rest.core.AmusingProperties;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Gemu on 2016/8/26.
@@ -14,6 +16,7 @@ public class JavaLog {
     private static BufferedWriter bwInfo;
     private static BufferedWriter bwDebug;
     private static BufferedWriter bwIssue;
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     static {
         try {
@@ -41,7 +44,7 @@ public class JavaLog {
     public static void info(String message) {
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
         StackTraceElement caller = stackTrace[1];
-        String w = "info: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
+        String w = sdf.format(new Date()) +  "  info: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
         try {
             bwInfo.write(w);
             bwInfo.flush();
@@ -53,7 +56,7 @@ public class JavaLog {
     public static void debug(String message) {
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
         StackTraceElement caller = stackTrace[1];
-        String w = "debug: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
+        String w = sdf.format(new Date()) +  "  debug: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
         try {
             bwDebug.write(w);
             bwDebug.flush();
@@ -65,7 +68,7 @@ public class JavaLog {
     public static void issue(String message) {
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
         StackTraceElement caller = stackTrace[1];
-        String w = "issue: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
+        String w = sdf.format(new Date()) +  "  issue: " + message + "  ->  " + caller.getClassName() + " class; " + caller.getMethodName() + " method; " + caller.getLineNumber() + " line;\n";
         try {
             bwIssue.write(w);
             bwIssue.flush();

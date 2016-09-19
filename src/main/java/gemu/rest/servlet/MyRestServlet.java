@@ -43,7 +43,7 @@ public class MyRestServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {
-		// URL 参数的标志符号
+        // URL 参数的标志符号
 		String urlParamSymbolConfig = AmusingProperties.URL_PARAM_SYMBOL;
 		if (urlParamSymbolConfig == null || "".equals(urlParamSymbolConfig)) {} else { urlParamSymbol = urlParamSymbolConfig; };
 
@@ -103,15 +103,14 @@ public class MyRestServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest request,
 			HttpServletResponse response) {
-
-		String reqMethod = request.getMethod();
+        String reqMethod = request.getMethod();
 
 		Map<String, String[]> reqParams = request.getParameterMap();
 
 		Enumeration en = request.getParameterNames();
         while (en.hasMoreElements()) {
             String paramName = (String) en.nextElement();
-            System.out.println(paramName + " = " + request.getParameter(paramName));
+//            System.out.println(paramName + " = " + request.getParameter(paramName));
         }
 
 		String reqPath = request.getPathInfo();
@@ -133,6 +132,7 @@ public class MyRestServlet extends HttpServlet {
 							reqPath.substring(reqPath.indexOf(anno.value())
 									+ anno.value().length()), clazz, response, reqParams, reqMethod);
 				}
+				// TODO 匹配一级目录匹配方法的情况。即当类的MyUrl值为"/"
 			} catch (ReflectiveOperationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -145,7 +145,7 @@ public class MyRestServlet extends HttpServlet {
 		if (isMatch == 0) {
 			JavaLog.info("未找到匹配路径：" + reqMethod + " " + reqPath);
 		}
-	}
+    }
 
 	/**
 	 * 通过类文件的文件路径得到类的全类名
@@ -194,7 +194,7 @@ public class MyRestServlet extends HttpServlet {
                 if (annoValue.charAt(annoValue.length() - 1) == '/') {
                     annoValue = annoValue.substring(0, annoValue.length() - 1);
                 }
-                if (subUrl.charAt(subUrl.length() - 1) == '/') {
+                if (!"".equals(subUrl) && subUrl.charAt(subUrl.length() - 1) == '/') {
                     subUrl = subUrl.substring(0, subUrl.length() - 1);
                 }
 
@@ -205,6 +205,14 @@ public class MyRestServlet extends HttpServlet {
                         isMatch = 0;
                     else
                         isMatch = 1;
+				}
+
+				// 没有子路径，恰好匹配了类的MyUrl注释，则匹配方法MyUrl注释中的"/"
+				if ("".equals(subUrl) && "/".equals(annoValue)) {
+					if (!postParams.isEmpty())
+						isMatch = 1;
+					else
+						isMatch = 2;
 				}
 
 				// 判断不带参数的URL是否匹配
@@ -384,6 +392,7 @@ public class MyRestServlet extends HttpServlet {
 				}
 				break;
 			default:
+				response.getWriter().write(responseBody.toString());
 				break;
 		}
 		
