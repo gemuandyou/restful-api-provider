@@ -1,36 +1,134 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <title>解析JSON无格式字符串</title>
+    <style>
+        .dot {
+            height: 2px;
+            width: 2px;
+            border-radius: 100%;
+            position: absolute;
+            z-index: 0;
+            animation: splosh 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            background: transparent;
+        }
+
+        @keyframes splosh {
+            0% {
+                box-shadow: 0 0 0 0px rgba(66, 166, 223, 0.7);
+                background: rgba(48, 99, 128, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 0 50px rgba(66, 166, 223, 0);
+                background: rgba(48, 99, 128, 0);
+            }
+        }
+
+        .btn {
+            position: absolute;
+            height: 30px;
+            min-width: 100px;
+            background-color: #5996ca;
+            border: 0;
+            overflow: hidden;
+            color: white;
+        }
+    </style>
     <script src="../plugin/jquery/dist/jquery.js"></script>
 </head>
 <body>
 <div>
-    <textarea class="json-string-textarea" rows="30" style="width: 100%;background-color: ghostwhite" placeholder="请输入要解析的字符串"></textarea>
-    <button class="btn" onclick="parse();">解析</button>
-    <span>PS:可以解析一部分，足够页面显示，然后滚动后继续获取内容，即分页获取（但我没有实现）</span>
+    <h3>解析JSON无格式字符串</h3>
+    <div style="
+    width: 50px;
+    font-size: 10px;
+    display: inline-block;
+    text-align:right;
+    float:left;
+    border: 1px solid rgb(169, 169, 169);
+    padding: 2px;
+    border-right: 0;
+    background-color: rgba(191, 191, 191, 0.61);
+    height: 420px;
+    overflow: hidden;
+    color: #ca6262;">
+        <div class="line-num" style="position: relative;">
+        </div>
+    </div>
+    <textarea class="json-string-textarea" rows="30"
+              style="
+              padding-left: 7px;
+              background-color: ghostwhite;
+              font-size: 10px;
+              width: calc(100% - 50px - 2px - 2px - 7px - 1px - 1px - 2px - 2px);
+              border-left: 0;
+              resize: none;
+              outline:none;"
+              placeholder="请输入要解析的字符串" oninput="textChange(event)" onpropertychange="textChange(event)"></textarea>
 </div>
+<div style="height: 30px;">
+    <button class="btn" onclick="parse(event);">解析</button>
+</div>
+<p style="
+   font-size: 9px;
+   font-style: oblique;">PS:可以解析一部分，足够页面显示，然后滚动后继续获取内容，即分页获取（但我没有实现）</p>
+
 <script>
 
-    var parse = function(){
+    var parse = function (event) {
+
+        // 水波效果
+        var $currDom = $(event.target);
+        var count = new Date().getTime();
+        var dotLeft = event.pageX - $currDom.offset().left;
+        var dotTop = event.pageY - $currDom.offset().top;
+        // 点击按钮特效
+        $currDom.append("<div class='dot dot" + count + "' style='left: " + dotLeft + "px; top: " + dotTop + "px'></div>");
+        setTimeout(function() {
+            (function(count) {
+                $currDom.find('.dot' + count + '').remove();
+            })(count);
+        }, 1500);
+
         $.ajax({
 //                async:false,
-            timeout : 60000, //超时时间设置，单位毫秒
-            type : "POST", // 请求方式
+            timeout: 60000, //超时时间设置，单位毫秒
+            type: "POST", // 请求方式
 //                contentType:"text/html;charset=utf-8",
-            url : "/restful/api/parseJson", // 请求URL
-            data : {jsonString: $('.json-string-textarea').val()},
+            url: "/restful/api/parseJson", // 请求URL
+            data: {jsonString: $('.json-string-textarea').val()},
 //            dataType : "json",
-            success : function(data) { //成功返回的回调函数，msg是返回的结果
+            success: function (data) { //成功返回的回调函数，msg是返回的结果
                 $('.json-string-textarea').val(data);
+                var lineNum = $('.json-string-textarea').val().split('\n').length;
+                setLineNum(lineNum);
             },
-            cache : false //设置不用缓存（针对GET提交）
+            cache: false //设置不用缓存（针对GET提交）
         });
     };
 
-    $(function() {
+    var textChange = function (event) {
+        var contentHeight = event.target.scrollHeight;
+        var rowHeight = $('.line-num>div:first').height();
+        setLineNum(Math.ceil(contentHeight / rowHeight));
+    };
+
+    var setLineNum = function (num) {
+        var start = $('.line-num>div').length;
+        for (var i = start + 1; i <= num; i++) {
+            $('.line-num').append('<div>' + i + '</div>');
+        }
+    };
+
+    $(function () {
+        setLineNum(30);
         $('.json-string-textarea').focus();
+
+        $('.json-string-textarea').scroll(function() {
+            $('.line-num').css('top', -$('.json-string-textarea').scrollTop());
+        });
+
     });
 
 </script>
