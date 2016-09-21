@@ -16,14 +16,67 @@
             width:200px;
             height:100px
         }
+
+        .dot {
+            height: 2px;
+            width: 2px;
+            border-radius: 100%;
+            position: absolute;
+            z-index: 0;
+            animation: splosh 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            background: transparent;
+        }
+
+        @keyframes splosh {
+            0% {
+                box-shadow: 0 0 0 0px rgba(66, 166, 223, 0.7);
+                background: rgba(48, 99, 128, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 0 50px rgba(66, 166, 223, 0);
+                background: rgba(48, 99, 128, 0);
+            }
+        }
+
+        .btn {
+            min-width: 100px;
+            background-color: #5996ca;
+            border: 0;
+            overflow: hidden;
+            color: white;
+            line-height: 29px;
+        }
+
+        .resize-line {
+            width: calc(100% - 5px);
+            height: 5px;
+            float: left;
+            cursor: row-resize;
+            background-color: gray;
+        }
     </style>
 </head>
 <body>
 </div><div id="myOverview"></div>
 <div id="myDemo1"
-     style="width:calc(100% - 5px); height:800px; display: inline-block;float: left;background-color: #DAE4E4;">
+     style="
+     width:calc(100% - 5px);
+     height:500px;
+     display: inline-block;
+     float: left;
+     background-color: #DAE4E4;">
 </div>
-<div style="line-height: 50px;"><input placeholder="本地项目路径" type="text" name="path" style="width: 500px; height: 25px;"> <button style="line-height: 25px;" onclick="generator()">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span></div>
+<div class="resize-line"></div>
+<div style="line-height: 50px;clear:both;">
+    <input placeholder="本地项目路径" type="text" name="path" style="
+    width: 500px;
+    height: 25px;
+    float: left;
+    position: relative;
+    top: 18px;
+    padding-left: 5px;">
+    <button class="btn" onclick="generator(event)">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span>
+</div>
 
 <script>
     //        $(function() {
@@ -248,11 +301,11 @@
 
     var refreshDiagramData = initTree({nodes: [], rlts: []});
 
-    var generator = function() {
+    var generator = function(event) {
+
         var filePath = $('input[name="path"]').val();
 
         var handle = setInterval(function() {
-            console.count();
             var text = $('.load-text').text();
             if (text.length > 5) {
                 text = '';
@@ -291,6 +344,26 @@
         if (event.keyCode == '13') {
             generator();
         }
+    });
+
+    // 调整画板DIV大小
+    $('.resize-line').bind('mousedown', function(event) {
+        var originalPos = event.pageY;
+        var originalHeight = $('#myDemo1').height();
+
+        $('body').bind('mousemove', function(event) {
+            var resizeHeight = originalHeight + (event.pageY - originalPos);
+            if (resizeHeight > 800)
+                    resizeHeight = 800;
+            if (resizeHeight < 100)
+                    resizeHeight = 100;
+            $('#myDemo1').css('height', resizeHeight);
+        });
+
+        $('body').bind('mouseup', function(event) {
+            $('body').unbind('mousemove').unbind('mouseup');
+            generator();
+        });
     });
 
     //    });
