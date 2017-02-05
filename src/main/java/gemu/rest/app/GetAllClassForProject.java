@@ -203,7 +203,11 @@ public class GetAllClassForProject {
     }
 
     /**
-     * 从字符串中解析方法（单个匹配）。 //TODO 增则匹配需要完善（不把握是否能匹配正确）
+     * 从字符串中解析方法（单个匹配）。 //TODO 正则匹配需要完善（不把握是否能匹配正确）
+     * 不能匹配事例：
+     *  <ul>
+     *      <li>client.setUserInteraction(new UserInteraction() {
+     *  </ul>
      * @param string 要解析的字符串
      * @return
      */
@@ -215,6 +219,8 @@ public class GetAllClassForProject {
         if (isMatch) {
             String beforeMName = string.substring(0, string.indexOf("("));
             beforeMName = beforeMName.trim();
+            if (beforeMName.lastIndexOf(" ") == -1)
+                return null;
             beforeMName = beforeMName.substring(beforeMName.lastIndexOf(" "));
             beforeMName = beforeMName.trim();
             return beforeMName;

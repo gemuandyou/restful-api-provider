@@ -13,7 +13,7 @@ import java.io.File;
 @MyUrl("/hello")
 public class HelloResource {
 
-    // 还是给你个实例URL吧！ http://localhost:8080/MyRest/rest/hello/say/idabc1-hash!abc2test/!abc3$abc4/hello
+    // 还是给你个实例URL吧！ http://localhost:8080/myrest/api/hello/say/idabc1-hash!abc2test/!abc3$abc4/hello
     @MyUrl(value = "/say/id@@param1@@-hash!@@param2@@test/!@@param3@@$@@param4@@/hello", type = ReturnType.STRING, method = RequestMethod.POST)
     public String sayHello(MyRestParams paramsObj) {
         System.out.println(paramsObj.getParams());

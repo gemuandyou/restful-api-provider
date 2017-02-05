@@ -33,7 +33,7 @@ public class ParseProjectResource {
         try {
             GetAllClassForProject.srcPath = paramsObj.getPostParams().get("filePath")[0].toString();
             ClassTree classTree = GetAllClassForProject.getClassTree();
-            File file = new File("D:/tree.json");
+            File file = new File("/Users/gemu/Development/tree.json");
             FileWriter fileWriter = new FileWriter(file);
             fileWriter.write(JsonStringFormatParse.formatParse(classTree.toString()));
             fileWriter.flush();
