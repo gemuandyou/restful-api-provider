@@ -49,4 +49,51 @@ public class JsonStringFormatParse {
         return sb.toString();
     }
 
+    /**
+     * 解析无格式的JSON字符串（使用switch）
+     * ref: https://my.oschina.net/jasonli0102/blog/517052?p={{page}} 看到了这个，感觉代码更易读些，拿来借鉴
+     * @param unformatJsonString 带有格式的JSON字符串
+     * @return
+     */
+    public static String formatParseUseSwitch(String unformatJsonString) {
+        char[] stack = new char[1024]; // 存放括号，如 "{","}","[","]"
+        int top = -1;
+
+        StringBuffer sb = new StringBuffer();
+        char[] charArray = unformatJsonString.toCharArray();
+        int indentCount = 0;
+        for (int i = 0; i < charArray.length; i++) {
+            char c = charArray[i];
+            switch (c) {
+                case '{':
+                case '[':
+                    indentCount ++;
+                    sb.append(c).append('\n');
+                    for (int j = 0; j < indentCount; j++) {
+                        sb.append('\t');
+                    }
+                    break;
+                case ']':
+                case '}':
+                    indentCount --;
+                    sb.append('\n');
+                    for (int j = 0; j < indentCount; j++) {
+                        sb.append('\t');
+                    }
+                    sb.append(c);
+                    break;
+                case ',':
+                    sb.append(c).append('\n');
+                    for (int j = 0; j < indentCount; j++) {
+                        sb.append('\t');
+                    }
+                    break;
+                default:
+                    sb.append(c);
+                    break;
+            }
+        }
+        return sb.toString();
+    }
+
 }
