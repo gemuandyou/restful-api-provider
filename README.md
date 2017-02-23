@@ -7,4 +7,4 @@ Two simple applications.
 - Parsing the references to classes in Java project.
 <img src="https://raw.githubusercontent.com/gemuandyou/restful-api-provider/master/src/main/resources/img/parseClassStruct.png"/>
 - Parsing unformat json string.
-<img src="https://raw.githubusercontent.com/gemuandyou/restful-api-provider/blob/master/src/main/resources/img/jsonFormat.png"/>
+<img src="https://raw.githubusercontent.com/gemuandyou/restful-api-provider/master/src/main/resources/img/jsonFormat.png"/>
