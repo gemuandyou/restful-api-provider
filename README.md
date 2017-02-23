@@ -5,5 +5,5 @@ Java. Use reflection custom restful,  Similar to SpringMVC restful.
 
 Two simple applications.
 - Parsing the references to classes in Java project.
-<img src="http://img.taopic.com/uploads/allimg/140401/234775-14040121230797.jpg"/>
+<img src="https://raw.githubusercontent.com/gemuandyou/restful-api-provider/master/src/main/resources/img/parseClassStruct.png"/>
 - Parsing unformat json string.
