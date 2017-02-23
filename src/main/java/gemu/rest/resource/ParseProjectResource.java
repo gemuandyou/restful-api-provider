@@ -3,6 +3,7 @@ package gemu.rest.resource;
 import gemu.rest.annotation.MyUrl;
 import gemu.rest.app.ClassTree;
 import gemu.rest.app.GetAllClassForProject;
+import gemu.rest.core.AmusingProperties;
 import gemu.rest.core.MyRestParams;
 import gemu.rest.core.RequestMethod;
 import gemu.rest.core.ReturnType;
@@ -33,7 +34,7 @@ public class ParseProjectResource {
         try {
             GetAllClassForProject.srcPath = paramsObj.getPostParams().get("filePath")[0].toString();
             ClassTree classTree = GetAllClassForProject.getClassTree();
-            File file = new File("/Users/gemu/Development/tree.json");
+            File file = new File(AmusingProperties.TREE_DATE_FILE);
             FileWriter fileWriter = new FileWriter(file);
             fileWriter.write(JsonStringFormatParse.formatParse(classTree.toString()));
             fileWriter.flush();

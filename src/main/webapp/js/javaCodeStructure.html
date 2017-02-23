@@ -93,7 +93,7 @@
 //                                            GO(go.GridLayout,
 //                                                    { wrappingWidth: Infinity, alignment: go.GridLayout.Position, cellSize: new go.Size(1, 1) }),
                             layout: GO(go.TreeLayout,{
-                                angle: /*270*//*180*/90/*0*/, // 画面旋转角度
+                                angle: /*270*//*180*//*90*/0, // 画面旋转角度
                                 layerSpacing: 100 // 每层间隔
                             }),
                             initialContentAlignment: go.Spot.Center,
@@ -326,7 +326,7 @@
             timeout : 60000, //超时时间设置，单位毫秒
             type : "POST", // 请求方式
 //                contentType:"text/html;charset=utf-8",
-            url : "/myrest/api/project/parseClassRlt", // 请求URL
+            url : "/api/project/parseClassRlt", // 请求URL
             data : {filePath: filePath},
             dataType : "json",
             success : function(data) { //成功返回的回调函数，msg是返回的结果
