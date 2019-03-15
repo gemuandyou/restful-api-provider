@@ -25,7 +25,7 @@ public class HelloResource {
         return new File("C:\\Windows\\System32\\drivers\\etc\\hosts");
     }
 
-    @MyUrl(value = "/getJson/@op@", type = ReturnType.JSON)
+    @MyUrl(value = "/getJson/@@op@@", type = ReturnType.JSON)
     private String getJSON(MyRestParams paramsObj) {
         System.out.println(paramsObj.getParams().get("op"));
         JSONObject obj = new JSONObject();

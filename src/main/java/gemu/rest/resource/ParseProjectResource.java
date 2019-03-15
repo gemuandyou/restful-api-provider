@@ -16,7 +16,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
-
+/**
+ * 解析Java项目
+ */
 @MyUrl("/project")
 public class ParseProjectResource {
 
@@ -32,7 +34,7 @@ public class ParseProjectResource {
         System.out.println(paramsObj);
         response.setCharacterEncoding("GBK");
         try {
-            GetAllClassForProject.srcPath = paramsObj.getPostParams().get("filePath")[0].toString();
+            GetAllClassForProject.srcPath = paramsObj.getFormParams().get("filePath")[0];
             ClassTree classTree = GetAllClassForProject.getClassTree();
             File file = new File(AmusingProperties.TREE_DATE_FILE);
             FileWriter fileWriter = new FileWriter(file);

@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.*;
@@ -133,11 +134,14 @@ public class MyRestServlet extends HttpServlet {
 									+ anno.value().length()), clazz, response, reqParams, reqMethod);
 				}
 				// TODO 匹配一级目录匹配方法的情况。即当类的MyUrl值为"/"
-			} catch (ReflectiveOperationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
 				e.printStackTrace();
 			}
 		}
@@ -165,14 +169,14 @@ public class MyRestServlet extends HttpServlet {
 	 * @param subUrl
 	 * @param clazz
 	 * @param response
-	 * @param postParams
+	 * @param formParams
 	 * @param reqMethod 请求方式
 	 * @return 是否匹配
-	 * @throws ReflectiveOperationException
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	private byte executeMatchingMethod(String subUrl, Class clazz, HttpServletResponse response, Map<String, String[]> postParams, String reqMethod)
-			throws ReflectiveOperationException, IOException {
+	private byte executeMatchingMethod(String subUrl, Class clazz, HttpServletResponse response,
+									   Map<String, String[]> formParams, String reqMethod)
+			throws IOException, InvocationTargetException, IllegalAccessException, InstantiationException {
 		Method[] methods = clazz.getDeclaredMethods();
 
 		byte isMatch = 0; // 是否有匹配的URL
@@ -209,7 +213,7 @@ public class MyRestServlet extends HttpServlet {
 
 				// 没有子路径，恰好匹配了类的MyUrl注释，则匹配方法MyUrl注释中的"/"
 				if ("".equals(subUrl) && "/".equals(annoValue)) {
-					if (!postParams.isEmpty())
+					if (!formParams.isEmpty())
 						isMatch = 1;
 					else
 						isMatch = 2;
@@ -225,8 +229,8 @@ public class MyRestServlet extends HttpServlet {
 					method.setAccessible(true);
 					Object obj = clazz.newInstance();
 					// 响应
-					if (params != null || !postParams.isEmpty()) {
-						MyRestParams restParams = new MyRestParams(params, postParams);
+					if (params != null || !formParams.isEmpty()) {
+						MyRestParams restParams = new MyRestParams(params, formParams);
                         int methodParamsLen = method.getParameterTypes().length;
 						if (methodParamsLen != 0) {
 							Object[] customParams = new Object[methodParamsLen]; // 请求的目标方法参数

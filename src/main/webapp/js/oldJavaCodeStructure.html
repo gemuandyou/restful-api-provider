@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Java项目结构和类的引用关系解析</title>
+    <script src="../plugin/gojs/release/go-debug.js"></script>
+    <script src="../plugin/jquery/dist/jquery.js"></script>
+    <style type="text/css">
+        #myOverview {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: aliceblue;
+            z-index: 300; /* make sure its in front */
+            border: solid 1px blue;
+            width:200px;
+            height:100px
+        }
+
+        .dot {
+            height: 2px;
+            width: 2px;
+            border-radius: 100%;
+            position: absolute;
+            z-index: 0;
+            animation: splosh 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            background: transparent;
+        }
+
+        @keyframes splosh {
+            0% {
+                box-shadow: 0 0 0 0px rgba(66, 166, 223, 0.7);
+                background: rgba(48, 99, 128, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 0 50px rgba(66, 166, 223, 0);
+                background: rgba(48, 99, 128, 0);
+            }
+        }
+
+        .btn {
+            min-width: 100px;
+            background-color: #5996ca;
+            border: 0;
+            overflow: hidden;
+            color: white;
+            line-height: 29px;
+        }
+
+        .resize-line {
+            width: calc(100% - 5px);
+            height: 5px;
+            float: left;
+            cursor: row-resize;
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+</div><div id="myOverview"></div>
+<div id="myDemo1"
+     style="
+     width:calc(100% - 5px);
+     height:500px;
+     display: inline-block;
+     float: left;
+     background-color: #DAE4E4;">
+</div>
+<div class="resize-line"></div>
+<div style="line-height: 50px;clear:both;">
+    <input placeholder="本地项目路径" type="text" name="path" style="
+    width: 500px;
+    height: 25px;
+    float: left;
+    position: relative;
+    top: 18px;
+    padding-left: 5px;">
+    <button class="btn" onclick="generator(event)">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span>
+</div>
+
+<script>
+    //        $(function() {
+
+    var initTree = function(data) {
+
+        var GO = go.GraphObject.make; // 生成GraphObject对象
+
+        var myDiagram =
+            GO(go.Diagram, "myDemo1",
+                {
+                    allowDrop: true,
+//                                    layout:  // Diagram has simple horizontal layout
+//                                            GO(go.GridLayout,
+//                                                    { wrappingWidth: Infinity, alignment: go.GridLayout.Position, cellSize: new go.Size(1, 1) }),
+                    layout: GO(go.TreeLayout,{
+                        angle: /*270*//*180*//*90*/0, // 画面旋转角度
+                        layerSpacing: 100 // 每层间隔
+                    }),
+                    initialContentAlignment: go.Spot.Center,
+                    "commandHandler.archetypeGroupData": { isGroup: true, category: "OfNodes" },
+                    'toolManager.hoverDelay': 100,
+                    "undoManager.isEnabled": true
+                }
+            );
+
+        // 预览框
+        GO(go.Overview, "myOverview",  // the HTML DIV element for the Overview
+            { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
+
+        // 提示模板
+        var tooltipTemplate =
+            GO(go.Adornment, 'Auto',
+                GO(go.Shape, { stroke: '#bcbcbc' }),
+                GO(go.Panel, 'Table',
+                    GO(go.RowColumnDefinition,
+                        {
+                            row: 0,
+                            background: '#FFFAE3'
+                        }
+                    ),
+                    GO(go.Panel, 'TableRow',
+                        {
+                            isPanelMain: true
+                        },
+                        new go.Binding('itemArray', '', function(n,e) { var obj = [{text: n.tooltip}]; return obj; }),
+                        {
+                            itemTemplate:
+                                GO(go.Panel,
+                                    new go.Binding('column'),
+                                    {
+                                        click: function(e, node) {
+                                            console.log(node.data);
+                                        }
+                                    },
+                                    GO(go.TextBlock,
+                                        {
+                                            margin: new go.Margin(20, 20, 10, 20),
+                                            font: '8pt Arial'
+                                        },
+                                        new go.Binding('text')
+                                    )
+                                )
+                        }
+                    )
+                )
+            );
+
+
+        // 设置组模板
+        myDiagram.groupTemplateMap.add("ClassNode",
+            GO(go.Group, go.Panel.Auto,
+                {
+                    background: "transparent",
+                    ungroupable: true,
+                    computesBoundsAfterDrag: true,
+                    handlesDragDropForMembers: true,  // don't need to define handlers on member Nodes and Links
+                    // Groups containing Nodes lay out their members vertically
+                    layout:
+                        GO(go.GridLayout,
+                            { wrappingColumn: 1, alignment: go.GridLayout.Position,
+                                cellSize: new go.Size(1, 1), spacing: new go.Size(40, 4) })
+                },
+                GO(go.Shape, "RoundedRectangle",
+                    { fill: null, stroke: "#0099CC", strokeWidth: 2 }),
+                GO(go.Panel, go.Panel.Vertical,  // title above Placeholder
+                    GO(go.Panel, go.Panel.Horizontal,  // button next to TextBlock
+                        {
+                            stretch: go.GraphObject.Horizontal,
+                            background: "#33D3E5"
+                        },
+                        GO("SubGraphExpanderButton",
+                            { alignment: go.Spot.Right, margin: 5 }),
+                        GO(go.TextBlock,
+                            {
+                                alignment: go.Spot.Left,
+                                editable: true,
+                                margin: 5,
+                                font: "bold 16px sans-serif",
+                                stroke: "#006080",
+                                toolTip: tooltipTemplate
+                            },
+                            new go.Binding("text", "text").makeTwoWay())
+                    ),  // end Horizontal Panel
+                    GO(go.Placeholder,
+                        { padding: 5, alignment: go.Spot.TopLeft })
+                )  // end Vertical Panel
+            )
+        );
+
+        myDiagram.nodeTemplate =
+            GO(go.Node, go.Panel.Auto,
+                {
+                    toolTip: tooltipTemplate
+                },
+                GO(go.Shape, "Rectangle",
+                    { fill: "#e1e1e1", stroke: "#558000", strokeWidth: 1, areaBackground: 'red' }
+                ),
+                GO(go.TextBlock,
+                    {
+                        margin: 7,
+                        editable: true,
+                        font: "bold 13px sans-serif",
+                        stroke: "#446700"
+                    },
+                    new go.Binding("text", "text").makeTwoWay()
+                )
+            );
+
+
+        // 连线
+        myDiagram.linkTemplate =
+            GO(
+                go.Link,
+                {
+                    routing: go.Link.AvoidsNodes, // 连线避开节点
+                    corner: 5,
+                    reshapable: true,
+                    curve: go.Link.JumpOver, // JumpOver：设置连线不香蕉（还鸭梨呢）
+                    selectable: true,
+                    relinkableFrom: true,
+                    relinkableTo: true,
+                    resegmentable: true,
+                    curve: go.Link.Bezier, // 贝塞尔曲线
+                    toEndSegmentLength: 30, fromEndSegmentLength: 30
+                }, // routing --- Orthogonal：设置直线为直角，Normal为默认；corner：设置连线折点出的平滑程度，0为直角，大于0为圆角，貌似10为最大，负数为最大圆角
+                GO(go.Shape, {strokeWidth: 2, stroke: '#999'}),
+                GO(go.Shape,{ toArrow: 'Standard', fill: '#999', stroke: '#999'}),   // 箭头
+                GO(go.Panel, "Auto",
+                    GO(go.Shape,  // the label background, which becomes transparent around the edges
+                        {
+                            fill: GO(go.Brush, "Radial",
+                                { 0: "rgb(240, 240, 240)", 0.3: "rgb(240, 240, 240)", 1: "rgba(240, 240, 240, 0)" }),
+                            stroke: null
+                        }),
+                    GO(go.TextBlock, "被调用",  // the label text
+                        {
+                            textAlign: "center",
+                            font: "9pt helvetica, arial, sans-serif",
+                            margin: 4,
+                            editable: true  // enable in-place editing
+                        },
+                        // editing the text automatically updates the model data
+                        new go.Binding("text").makeTwoWay())
+                )
+            );
+
+        var nodeDataArray = [
+            { key: "Omega", isGroup: true, "category":"OfNodes", text: 'Person', tooltip: 'Person' }, // 此节点为组
+            { key: "Beta",  group: "Omega",name: 'BetaName', text: 'BetaName', tooltip: 'BetaName'   }, // 设置此节点在组Omega中
+            { key: "Gamma", group: "Omega",name:'GammaName', text: 'GammaName', tooltip: 'GammaName'   },
+            { key: "Epsilon",  group: "Omega",name:'EpsilonName', text: 'EpsilonName', tooltip: 'EpsilonName'   },
+            { key: "Zeta", group: "Omega",name:'ZetaName', text: 'ZetaName', tooltip: 'ZetaName'   },
+
+            { key: "Delta", isGroup: true, "category": "OfNodes", text: 'Dog', tooltip: 'Dog'   },
+            { key: "Gamma1", group: "Delta",name:'GammaName1', text: 'GammaName1', tooltip: 'GammaName1'   },
+            { key: "Epsilon1",  group: "Delta",name:'EpsilonName1', text: 'EpsilonName1', tooltip: 'EpsilonName1'   },
+            { key: "Zeta1", group: "Delta",name:'ZetaName1', text: 'ZetaName1', tooltip: 'ZetaName1'   }
+        ];
+        var linkDataArray = [
+            { from: "Beta", to: "Gamma1" }, // from a Node to the Group
+            { from: "Gamma", to: "Gamma1" },  // this link is a member of the Group
+            { from: "Epsilon", to: "Zeta1" },  // this link is a member of the Group
+            { from: "Zeta", to: "Epsilon1" },  // this link is a member of the Group
+            { from: "Epsilon", to: "Epsilon1" },  // this link is a member of the Group
+            { from: "Beta", to: "Gamma1" }  // from the Group to a Node
+        ];
+
+        var refreshDiagramData = function(jsonData) {
+            nodeDataArray = [];
+            linkDataArray = [];
+            var nodeNames = jsonData.nodes;
+            for(var i = 0; i < nodeNames.length; i++) {
+                var nodeName = nodeNames[i];
+                var node = {};
+                for(var j = 1; j < nodeName.length; j++) {
+                    var method = {};
+                    method.key = nodeName[j].name;
+                    method.group = nodeName[0].name;
+                    method.name = nodeName[j].name;
+                    method.text = nodeName[j].name;
+                    method.tooltip = nodeName[j].anno;
+                    nodeDataArray.push(method);
+                }
+                node.key = nodeName[0].name;
+                node.isGroup = true;
+                node.category = "ClassNode";
+                node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
+                node.tooltip = nodeName[0].name;
+                nodeDataArray.push(node);
+            }
+
+            linkDataArray = jsonData.rlts;
+
+            var model = new go.GraphLinksModel(nodeDataArray, linkDataArray);// 定义数据模板
+            myDiagram.model = model; // 使用数据模板
+        };
+        refreshDiagramData(data);
+
+        return refreshDiagramData;
+    };
+
+    var refreshDiagramData = initTree({nodes: [], rlts: []});
+
+    var generator = function(event) {
+
+        var filePath = $('input[name="path"]').val();
+
+        var handle = setInterval(function() {
+            var text = $('.load-text').text();
+            if (text.length > 5) {
+                text = '';
+            } else {
+                text += '.';
+            }
+            $('.load-text').text(text);
+        }, 500);
+
+        setTimeout(function() {
+            clearInterval(handle);
+            $('.load-text').text('');
+        }, 60000);
+
+        // 获取treeData数据
+        $.ajax({
+//                async:false,
+            timeout : 60000, //超时时间设置，单位毫秒
+            type : "POST", // 请求方式
+//                contentType:"text/html;charset=utf-8",
+            url : "/api/project/parseClassRlt", // 请求URL
+            data : {filePath: filePath},
+            dataType : "json",
+            success : function(data) { //成功返回的回调函数，msg是返回的结果
+                clearInterval(handle);
+                $('.load-text').text('');
+                refreshDiagramData(data);
+            },
+            cache : false //设置不用缓存（针对GET提交）
+        });
+    };
+
+    $('input[name="path"]').focus();
+
+    $('input[name="path"]').bind('keyup', function(event) {
+        if (event.keyCode == '13') {
+            generator();
+        }
+    });
+
+    // 调整画板DIV大小
+    $('.resize-line').bind('mousedown', function(event) {
+        var originalPos = event.pageY;
+        var originalHeight = $('#myDemo1').height();
+
+        $('body').bind('mousemove', function(event) {
+            var resizeHeight = originalHeight + (event.pageY - originalPos);
+            if (resizeHeight > 800)
+                resizeHeight = 800;
+            if (resizeHeight < 100)
+                resizeHeight = 100;
+            $('#myDemo1').css('height', resizeHeight);
+        });
+
+        $('body').bind('mouseup', function(event) {
+            $('body').unbind('mousemove').unbind('mouseup');
+            generator();
+        });
+    });
+
+    //    });
+
+</script>
+</body>
+</html>

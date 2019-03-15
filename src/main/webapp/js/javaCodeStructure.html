@@ -56,32 +56,71 @@
         }
     </style>
 </head>
+
 <body>
-</div><div id="myOverview"></div>
-<div id="myDemo1"
-     style="
-     width:calc(100% - 5px);
-     height:500px;
-     display: inline-block;
-     float: left;
-     background-color: #DAE4E4;">
-</div>
-<div class="resize-line"></div>
-<div style="line-height: 50px;clear:both;">
-    <input placeholder="本地项目路径" type="text" name="path" style="
-    width: 500px;
-    height: 25px;
-    float: left;
-    position: relative;
-    top: 18px;
-    padding-left: 5px;">
-    <button class="btn" onclick="generator(event)">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span>
-</div>
+    <div id="myOverview"></div>
+    <div id="myDemo1"
+         style="
+             width:calc(100% - 5px);
+             height:500px;
+             display: inline-block;
+             float: left;
+             background-color: #DAE4E4;">
+    </div>
+    <div class="resize-line"></div>
+    <div style="line-height: 50px;clear:both;">
+        <input placeholder="本地项目路径" type="text" name="path" style="
+            width: 500px;
+            height: 25px;
+            float: left;
+            position: relative;
+            top: 18px;
+            padding-left: 5px;">
+        <button class="btn" onclick="generator(event)">解析</button> <span class="load-text" style="font-size: 37px; color: gray;"></span>
+        <br>
+        <input placeholder="全限定类名过滤" type="text" name="filterClassName" style="
+            width: 500px;
+            height: 25px;
+            float: left;
+            position: relative;
+            top: 18px;
+            padding-left: 5px;">
+        <button class="btn" onclick="filterDiagramDataByClassName()">过滤</button>
+        <button class="btn" onclick="loadDataNext(event)">继续加载数据</button>
+    </div>
+</body>
 
 <script>
     //        $(function() {
 
-    var initTree = function(data) {
+    var nodeDataArray = [
+        { key: "Omega", isGroup: true, "category":"OfNodes", text: 'Person', tooltip: 'Person' }, // 此节点为组
+        { key: "Beta",  group: "Omega",name: 'BetaName', text: 'BetaName', tooltip: 'BetaName'   }, // 设置此节点在组Omega中
+        { key: "Gamma", group: "Omega",name:'GammaName', text: 'GammaName', tooltip: 'GammaName'   },
+        { key: "Epsilon",  group: "Omega",name:'EpsilonName', text: 'EpsilonName', tooltip: 'EpsilonName'   },
+        { key: "Zeta", group: "Omega",name:'ZetaName', text: 'ZetaName', tooltip: 'ZetaName'   },
+
+        { key: "Delta", isGroup: true, "category": "OfNodes", text: 'Dog', tooltip: 'Dog'   },
+        { key: "Gamma1", group: "Delta",name:'GammaName1', text: 'GammaName1', tooltip: 'GammaName1'   },
+        { key: "Epsilon1",  group: "Delta",name:'EpsilonName1', text: 'EpsilonName1', tooltip: 'EpsilonName1'   },
+        { key: "Zeta1", group: "Delta",name:'ZetaName1', text: 'ZetaName1', tooltip: 'ZetaName1'   }
+    ];
+    var linkDataArray = [
+        { from: "Beta", to: "Gamma1" }, // from a Node to the Group
+        { from: "Gamma", to: "Gamma1" },  // this link is a member of the Group
+        { from: "Epsilon", to: "Zeta1" },  // this link is a member of the Group
+        { from: "Zeta", to: "Epsilon1" },  // this link is a member of the Group
+        { from: "Epsilon", to: "Epsilon1" },  // this link is a member of the Group
+        { from: "Beta", to: "Gamma1" }  // from the Group to a Node
+    ];
+
+    var dataBatch = 1; // 数据太多，将数据分批
+    var batchCount = 38; // 每批数据量
+    var lastBatchNode = ''; // 每批最后一个节点
+    var classNodeCount = 0; // 组节点（类节点）序号
+    var classNodeMap = new Map(); // 组节点（类节点）序号和在所有节点中的位置映射
+
+    var initTree = function() {
 
         var GO = go.GraphObject.make; // 生成GraphObject对象
 
@@ -94,9 +133,14 @@
 //                                                    { wrappingWidth: Infinity, alignment: go.GridLayout.Position, cellSize: new go.Size(1, 1) }),
                             layout: GO(go.TreeLayout,{
                                 angle: /*270*//*180*//*90*/0, // 画面旋转角度
-                                layerSpacing: 100 // 每层间隔
+                                layerSpacing: 100 // 每层间隔,
+                                // isInitial: true
+                                // isOngoing: false
                             }),
                             initialContentAlignment: go.Spot.Center,
+                            contentAlignment: go.Spot.Center,
+                            initialDocumentSpot: go.Spot.Center,
+                            initialViewportSpot: go.Spot.Center,
                             "commandHandler.archetypeGroupData": { isGroup: true, category: "OfNodes" },
                             'toolManager.hoverDelay': 100,
                             "undoManager.isEnabled": true
@@ -179,7 +223,7 @@
                                                     stroke: "#006080",
                                                     toolTip: tooltipTemplate
                                                 },
-                                                new go.Binding("text", "text").makeTwoWay())
+                                                new go.Binding("text", "key").makeTwoWay())
                                 ),  // end Horizontal Panel
                                 GO(go.Placeholder,
                                         { padding: 5, alignment: go.Spot.TopLeft })
@@ -191,6 +235,7 @@
                 GO(go.Node, go.Panel.Auto,
                         {
                             toolTip: tooltipTemplate
+                            // isLayoutPositioned: true
                         },
                         GO(go.Shape, "Rectangle",
                                 { fill: "#e1e1e1", stroke: "#558000", strokeWidth: 1, areaBackground: 'red' }
@@ -221,7 +266,9 @@
                             relinkableTo: true,
                             resegmentable: true,
                             curve: go.Link.Bezier, // 贝塞尔曲线
-                            toEndSegmentLength: 30, fromEndSegmentLength: 30
+                            toEndSegmentLength: 30,
+                            fromEndSegmentLength: 30
+                            // isLayoutPositioned: true
                         }, // routing --- Orthogonal：设置直线为直角，Normal为默认；corner：设置连线折点出的平滑程度，0为直角，大于0为圆角，貌似10为最大，负数为最大圆角
                         GO(go.Shape, {strokeWidth: 2, stroke: '#999'}),
                         GO(go.Shape,{ toArrow: 'Standard', fill: '#999', stroke: '#999'}),   // 箭头
@@ -244,65 +291,110 @@
                         )
                 );
 
-        var nodeDataArray = [
-            { key: "Omega", isGroup: true, "category":"OfNodes", text: 'Person', tooltip: 'Person' }, // 此节点为组
-            { key: "Beta",  group: "Omega",name: 'BetaName', text: 'BetaName', tooltip: 'BetaName'   }, // 设置此节点在组Omega中
-            { key: "Gamma", group: "Omega",name:'GammaName', text: 'GammaName', tooltip: 'GammaName'   },
-            { key: "Epsilon",  group: "Omega",name:'EpsilonName', text: 'EpsilonName', tooltip: 'EpsilonName'   },
-            { key: "Zeta", group: "Omega",name:'ZetaName', text: 'ZetaName', tooltip: 'ZetaName'   },
+        myDiagram.model = new go.GraphLinksModel([], []);// 定义数据模板
+        nodeDataArray = [];
+        linkDataArray = [];
 
-            { key: "Delta", isGroup: true, "category": "OfNodes", text: 'Dog', tooltip: 'Dog'   },
-            { key: "Gamma1", group: "Delta",name:'GammaName1', text: 'GammaName1', tooltip: 'GammaName1'   },
-            { key: "Epsilon1",  group: "Delta",name:'EpsilonName1', text: 'EpsilonName1', tooltip: 'EpsilonName1'   },
-            { key: "Zeta1", group: "Delta",name:'ZetaName1', text: 'ZetaName1', tooltip: 'ZetaName1'   }
-        ];
-        var linkDataArray = [
-            { from: "Beta", to: "Gamma1" }, // from a Node to the Group
-            { from: "Gamma", to: "Gamma1" },  // this link is a member of the Group
-            { from: "Epsilon", to: "Zeta1" },  // this link is a member of the Group
-            { from: "Zeta", to: "Epsilon1" },  // this link is a member of the Group
-            { from: "Epsilon", to: "Epsilon1" },  // this link is a member of the Group
-            { from: "Beta", to: "Gamma1" }  // from the Group to a Node
-        ];
-
-        var refreshDiagramData = function(jsonData) {
-            nodeDataArray = [];
-            linkDataArray = [];
-            var nodeNames = jsonData.nodes;
-            for(var i = 0; i < nodeNames.length; i++) {
-                var nodeName = nodeNames[i];
-                var node = {};
-                for(var j = 1; j < nodeName.length; j++) {
-                    var method = {};
-                    method.key = nodeName[j].name;
-                    method.group = nodeName[0].name;
-                    method.name = nodeName[j].name;
-                    method.text = nodeName[j].name;
-                    method.tooltip = nodeName[j].anno;
-                    nodeDataArray.push(method);
-                }
-                node.key = nodeName[0].name;
-                node.isGroup = true;
-                node.category = "ClassNode";
-                node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
-                node.tooltip = nodeName[0].name;
-                nodeDataArray.push(node);
-            }
-
-            linkDataArray = jsonData.rlts;
-
-            var model = new go.GraphLinksModel(nodeDataArray, linkDataArray);// 定义数据模板
-            myDiagram.model = model; // 使用数据模板
-        };
-        refreshDiagramData(data);
-
-        return refreshDiagramData;
+        return myDiagram;
     };
 
-    var refreshDiagramData = initTree({nodes: [], rlts: []});
+    var myDiagram = initTree();
+
+    var onViewportChanged = function(e) {
+        console.log(e);
+        if (lastBatchNode && myDiagram.model.containsNodeData(lastBatchNode) &&
+            nodeDataArray[nodeDataArray.length - 1] != lastBatchNode) {
+            // dataBatch++;
+            // addDataToDiagram();
+        }
+    };
+
+    var loadDataNext = function() {
+        dataBatch++;
+        addDataToDiagram();
+    };
+
+    var filterDiagramDataByClassName = function() {
+        myDiagram.clear();
+        dataBatch = 1;
+        addDataToDiagram();
+    };
+
+    myDiagram.addDiagramListener("ViewportBoundsChanged", onViewportChanged);
+
+    var refreshDiagramData = function(jsonData) {
+        nodeDataArray = [];
+        linkDataArray = [];
+        var nodeNames = jsonData.nodes;
+        for(var i = 0; i < nodeNames.length; i++) {
+            var nodeName = nodeNames[i];
+            var node = {};
+            node.key = nodeName[0].name;
+            node.isGroup = true;
+            node.category = "ClassNode";
+            node.text = nodeName[0].name.substr(nodeName[0].name.lastIndexOf('.') + 1);
+            node.tooltip = nodeName[0].name;
+            nodeDataArray.push(node);
+            classNodeMap.set(classNodeCount++, nodeDataArray.length - 1);
+            for(var j = 1; j < nodeName.length; j++) {
+                var method = {};
+                method.key = nodeName[j].name;
+                method.group = nodeName[0].name;
+                method.name = nodeName[j].name;
+                method.text = nodeName[j].name;
+                method.tooltip = nodeName[j].anno;
+                nodeDataArray.push(method);
+            }
+        }
+
+        linkDataArray = jsonData.rlts;
+
+        addDataToDiagram();
+    };
+
+    var addDataToDiagram = function() {
+        var filterNode = [];
+        var filterLink = [];
+        var className = $('input[name="filterClassName"]').val();
+        if (className) {
+            var classNodeNames = [className];
+            linkDataArray.forEach(function(link) {
+                if (link.from === className || link.to === className) {
+                    filterLink.push(link);
+                    if ($.inArray(link.from, classNodeNames) === -1) {
+                        classNodeNames.push(link.from)
+                    }
+                    if ($.inArray(link.to, classNodeNames) === -1) {
+                        classNodeNames.push(link.to)
+                    }
+                }
+            });
+            var groupName = '-';
+            nodeDataArray.forEach(function(node) {
+                if (groupName === node.group) {
+                    filterNode.push(node);
+                }
+                if ($.inArray(node.key, classNodeNames) >= 0) {
+                    if (groupName !== node.key) {
+                        groupName = node.key;
+                    }
+                    filterNode.push(node);
+                }
+            });
+        }
+
+        myDiagram.model.addNodeDataCollection(className ?
+            filterNode.slice(classNodeMap.get((dataBatch - 1) * batchCount), classNodeMap.get(dataBatch * batchCount)) :
+            nodeDataArray.slice(classNodeMap.get((dataBatch - 1) * batchCount), classNodeMap.get(dataBatch * batchCount))
+        );
+        myDiagram.model.addLinkDataCollection(className ?
+            filterLink.slice(classNodeMap.get((dataBatch - 1) * batchCount), classNodeMap.get(dataBatch * batchCount)) :
+            linkDataArray.slice(classNodeMap.get((dataBatch - 1) * batchCount), classNodeMap.get(dataBatch * batchCount))
+        );
+        lastBatchNode = nodeDataArray[classNodeMap.get(dataBatch * batchCount) - 1];
+    };
 
     var generator = function(event) {
-
         var filePath = $('input[name="path"]').val();
 
         var handle = setInterval(function() {
@@ -332,6 +424,7 @@
             success : function(data) { //成功返回的回调函数，msg是返回的结果
                 clearInterval(handle);
                 $('.load-text').text('');
+                myDiagram.model.clear();
                 refreshDiagramData(data);
             },
             cache : false //设置不用缓存（针对GET提交）
@@ -369,5 +462,5 @@
     //    });
 
 </script>
-</body>
+
 </html>

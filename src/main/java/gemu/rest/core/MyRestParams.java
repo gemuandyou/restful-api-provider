@@ -17,36 +17,37 @@ public class MyRestParams {
 	/**
 	 * post请求参数
 	 */
-	private Map<String, String[]> postParams = new HashMap<String, String[]>();
+	private Map<String, String[]> formParams = new HashMap<String, String[]>();
 
 	public Map<String, Object> getParams() {
 		return params;
-	}
-	public Map<String, String[]> getPostParams() {
-		return postParams;
 	}
 
 	public void setParams(Map<String, Object> params) {
 		this.params = params;
 	}
 
-	public void setPostParams(Map<String, String[]> params) {
-		this.postParams = params;
+	public Map<String, String[]> getFormParams() {
+		return formParams;
+	}
+
+	public void setFormParams(Map<String, String[]> formParams) {
+		this.formParams = formParams;
 	}
 
 	public MyRestParams() {
 	}
 
-	public MyRestParams(Map<String, Object> params, Map<String, String[]> postparams) {
+	public MyRestParams(Map<String, Object> params, Map<String, String[]> formParams) {
 		this.params = params;
-		this.postParams = postparams;
+		this.formParams = formParams;
 	}
 
 	@Override
 	public String toString() {
 		return "MyRestParams{" +
 				"params=" + params +
-				" , postParms=" + postParams +
+				" , postParms=" + formParams +
 				'}';
 	}
 }

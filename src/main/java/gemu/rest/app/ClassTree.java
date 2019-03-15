@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 项目类关系树
  * Created by Gemu on 2/19/2016 0019.
  */
 public class ClassTree {

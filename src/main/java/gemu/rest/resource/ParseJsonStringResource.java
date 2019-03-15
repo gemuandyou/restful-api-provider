@@ -6,6 +6,7 @@ import gemu.rest.core.RequestMethod;
 import gemu.rest.tool.auxiliary.JsonStringFormatParse;
 
 /**
+ * 解析JSON数据
  * Created by Gemu on 2016/9/19.
  */
 @MyUrl("/parseJson")
@@ -18,8 +19,8 @@ public class ParseJsonStringResource {
      */
     @MyUrl(value = "/", method = RequestMethod.POST)
     public String parseJsonString(MyRestParams paramsObj) {
-//        String jsonString = JsonStringFormatParse.formatParse(paramsObj.getPostParams().get("jsonString")[0].toString());
-        String jsonString = JsonStringFormatParse.formatParseUseSwitch(paramsObj.getPostParams().get("jsonString")[0].toString());
+//        String jsonString = JsonStringFormatParse.formatParse(paramsObj.getFormParams().get("jsonString")[0].toString());
+        String jsonString = JsonStringFormatParse.formatParseUseSwitch(paramsObj.getFormParams().get("jsonString")[0].toString());
         return jsonString;
     }
 
